@@ -80,6 +80,7 @@ namespace RimDoctor
                     // Index sound paths now that defs are loaded, so sound-path texture
                     // probes get classified benign.
                     SoundPathIndex.Build();
+                    ModAssemblyIndex.Build();          // for code-based culprit attribution
                     LogDoctor.ReclassifySoundProbes(); // sweep load-time probes into benign
                     RDLog.Msg($"Load completed cleanly. Log Doctor: {LogAdviceDatabase.RuleCount} rule(s); " +
                               $"{LogDoctor.IssueCount} issue(s) to address, {LogDoctor.BenignCount} benign.");

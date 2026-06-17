@@ -87,6 +87,13 @@ namespace RimDoctor
             {
                 if (string.IsNullOrEmpty(text))
                     return null;
+
+                // Strongest signal: a mod's assembly/namespace appearing in a stack
+                // trace (this is thread-safe — it reads a prebuilt index, not mod state).
+                string byCode = ModAssemblyIndex.IdentifyFromText(text);
+                if (byCode != null)
+                    return byCode;
+
                 if (!UnityData.IsInMainThread)
                     return null; // threaded log hook — avoid touching mod state off-thread
                 var mods = LoadedModManager.RunningModsListForReading;

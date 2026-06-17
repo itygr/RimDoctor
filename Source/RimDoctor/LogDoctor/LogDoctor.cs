@@ -74,19 +74,30 @@ namespace RimDoctor
                     for (int i = ordered.Count - 1; i >= 0; i--)
                     {
                         var e = ordered[i];
-                        if (e.advice == null || e.advice.attributionHint != "texturePath") continue;
-                        var m = e.advice.TryMatch(e.fullText);
-                        if (m == null || m.Groups.Count <= 1) continue;
-                        if (!SoundPathIndex.IsSoundPath(m.Groups[1].Value.Trim().Trim('\''))) continue;
 
-                        ordered.RemoveAt(i);
-                        byKey.Remove(e.DedupKey);
-                        e.isBenign = true;
-                        if (!benignByKey.ContainsKey(e.DedupKey))
+                        // 1) Move sound-path texture probes into benign.
+                        if (e.advice != null && e.advice.attributionHint == "texturePath")
                         {
-                            benignByKey[e.DedupKey] = e;
-                            benignOrdered.Add(e);
+                            var m = e.advice.TryMatch(e.fullText);
+                            if (m != null && m.Groups.Count > 1
+                                && SoundPathIndex.IsSoundPath(m.Groups[1].Value.Trim().Trim('\'')))
+                            {
+                                ordered.RemoveAt(i);
+                                byKey.Remove(e.DedupKey);
+                                e.isBenign = true;
+                                if (!benignByKey.ContainsKey(e.DedupKey))
+                                {
+                                    benignByKey[e.DedupKey] = e;
+                                    benignOrdered.Add(e);
+                                }
+                                continue;
+                            }
                         }
+
+                        // 2) Re-attribute entries captured before the assembly index
+                        //    was ready (load-time exceptions).
+                        if (string.IsNullOrEmpty(e.culpritMod))
+                            e.culpritMod = ModAttribution.GuessOwnerFromText(e.fullText);
                     }
                     version++;
                 }
