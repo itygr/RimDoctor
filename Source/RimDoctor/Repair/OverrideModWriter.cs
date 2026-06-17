@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
+using Verse;
 
 namespace RimDoctor
 {
@@ -108,6 +109,34 @@ namespace RimDoctor
         public static void WriteText(string relativePath, string text)
         {
             WriteFile(relativePath, System.Text.Encoding.UTF8.GetBytes(text));
+        }
+
+        /// <summary>
+        /// Make the just-written override mod discoverable and active so it loads on
+        /// the next restart. RimWorld only reads the mod list at startup, so this
+        /// must be followed by a restart to take effect. Best-effort: if the mod
+        /// can't be activated pre-restart, RimWorld will still discover the folder
+        /// on launch and the user can enable it manually.
+        /// </summary>
+        public static bool RegisterAndActivate()
+        {
+            try
+            {
+                // Rescan installed mods so the freshly-written folder is known.
+                ModLister.RebuildModList();
+                ModsConfig.SetActive(PackageId, true);
+                ModsConfig.Save();
+                bool active = ModsConfig.IsActive(PackageId);
+                RDLog.Msg(active
+                    ? $"Enabled '{ModName}' in the active mod list (loads on restart)."
+                    : $"Could not auto-enable '{ModName}'; enable it manually after restart.");
+                return active;
+            }
+            catch (Exception e)
+            {
+                RDLog.Exception("RegisterAndActivate override mod failed", e);
+                return false;
+            }
         }
 
         /// <summary>Delete the entire generated override mod (used by full undo).</summary>

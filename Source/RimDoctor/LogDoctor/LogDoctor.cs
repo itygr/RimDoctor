@@ -97,6 +97,16 @@ namespace RimDoctor
 
                     byKey[key] = entry;
                     ordered.Add(entry);
+
+                    // Mirror each NEW unique game-log issue into RimDoctor's persistent
+                    // session log so the on-disk log captures game errors too (not just
+                    // RimDoctor's own events). Deduped, so this stays low-volume.
+                    DiagLevel dl = severity == LogSeverity.Error ? DiagLevel.Error
+                                 : severity == LogSeverity.Warning ? DiagLevel.Warn
+                                 : DiagLevel.Info;
+                    string suffix = entry.culpritMod != null ? $"  [culprit: {entry.culpritMod}]" : "";
+                    DiagnosticLog.Write(dl, "GameLog", firstLine + suffix);
+
                     if (ordered.Count > MaxEntries)
                     {
                         var removed = ordered[0];

@@ -27,7 +27,23 @@ namespace RimDoctor
 
         public void OnSelected()
         {
-            if (items == null) Refresh();
+            // Auto-populate the action list the first time the panel opens: run a
+            // health scan + a sort if they haven't run yet, so every source is fed.
+            try
+            {
+                if (ContentHealthScanner.LastResult == null)
+                    ContentHealthScanner.Scan();
+                if (LoadOrderSorter.Last == null)
+                {
+                    CommunityRules.LoadOrReload();
+                    LoadOrderSorter.Sort();
+                }
+            }
+            catch (System.Exception e)
+            {
+                RDLog.Exception("Diagnostics auto-populate failed", e);
+            }
+            Refresh();
         }
 
         private void Refresh()

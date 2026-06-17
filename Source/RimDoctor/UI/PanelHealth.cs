@@ -153,9 +153,18 @@ namespace RimDoctor
         {
             Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
                 "RimDoctor.Health.RestartPrompt".TranslateSafe(
-                    "Repairs written. Restart RimWorld now to load them?\n" +
-                    "(You may also need to enable 'RimDoctor Overrides' in your mod list first.)"),
-                () => { try { GenCommandLine.Restart(); } catch { } },
+                    "Repairs written. Enable 'RimDoctor Overrides' and restart RimWorld now?\n\n" +
+                    "RimWorld only loads mods at startup, so the fixes take effect after a restart. " +
+                    "RimDoctor will enable the override mod (it loads last) for you."),
+                () =>
+                {
+                    try
+                    {
+                        OverrideModWriter.RegisterAndActivate();
+                        GenCommandLine.Restart();
+                    }
+                    catch { }
+                },
                 destructive: false));
         }
 
