@@ -1,0 +1,21 @@
+# Build intermediates
+Source/**/obj/
+Source/**/bin/
+*.user
+
+# Never commit game / Harmony assemblies (referenced from the local install)
+**/Assembly-CSharp.dll
+**/UnityEngine*.dll
+**/0Harmony.dll
+
+# Compiled output IS shipped with the mod, so keep it tracked:
+!1.6/Assemblies/RimDoctor.dll
+
+# macOS cruft
+.DS_Store
+
+# RimDoctor runtime artifacts (generated in the game's mod dir at runtime)
+Backups/
+
+# Local Claude Code settings
+.claude/

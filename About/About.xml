@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>RimDoctor</name>
+  <author>tyler</author>
+  <packageId>tyler.rimdoctor</packageId>
+  <description>RimDoctor — a smart in-game mod manager + load/texture/log doctor.
+
+• Auto-sorts your load order using dependency rules + a community rules database, then writes ModsConfig.xml and offers a restart.
+• Scans for broken content (missing textures, bad def paths, incomplete mod downloads) and shows a clear health report.
+• Prevents missing-texture crashes at runtime by substituting a generated placeholder for any texture that fails to load.
+• Reads the live error log and explains it in plain language — what it means, the likely culprit mod, and a suggested fix.
+• Repairs problems across three tiers: report-only, safe auto-fixes, and maximum (via a generated local override mod — never by editing Workshop files).
+
+RimDoctor fails safe: if it errors, it disables the affected feature and never blocks the game from loading.</description>
+  <supportedVersions>
+    <li>1.6</li>
+  </supportedVersions>
+  <modDependencies>
+    <li>
+      <packageId>brrainz.harmony</packageId>
+      <displayName>Harmony</displayName>
+      <steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl>
+      <downloadUrl>https://github.com/pardeike/HarmonyRimWorld/releases/latest</downloadUrl>
+    </li>
+  </modDependencies>
+  <loadAfter>
+    <li>brrainz.harmony</li>
+  </loadAfter>
+</ModMetaData>

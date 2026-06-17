@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Settings window -->
+  <RimDoctor.Settings.Header>Runtime protection</RimDoctor.Settings.Header>
+  <RimDoctor.Settings.TextureFallback>Prevent missing-texture crashes (texture fallback)</RimDoctor.Settings.TextureFallback>
+  <RimDoctor.Settings.TextureFallback.Tip>Substitutes a generated placeholder for any texture that fails to load, instead of returning null (which freezes/crashes screens). Headline feature — recommended ON.</RimDoctor.Settings.TextureFallback.Tip>
+  <RimDoctor.Settings.LogSub>Log each substituted texture once</RimDoctor.Settings.LogSub>
+  <RimDoctor.Settings.LogDoctor>Enable Log Doctor (explain errors in plain language)</RimDoctor.Settings.LogDoctor>
+  <RimDoctor.Settings.RepairTier>Repair tier</RimDoctor.Settings.RepairTier>
+  <RimDoctor.Settings.Tier.Report>Report only — change nothing</RimDoctor.Settings.Tier.Report>
+  <RimDoctor.Settings.Tier.Safe>Safe auto-fix — non-destructive (via override mod)</RimDoctor.Settings.Tier.Safe>
+  <RimDoctor.Settings.Tier.Max>Maximum — rewrite/disable broken defs (via override mod)</RimDoctor.Settings.Tier.Max>
+
+  <!-- Main tab -->
+  <rimdoctor>RimDoctor</rimdoctor>
+</LanguageData>

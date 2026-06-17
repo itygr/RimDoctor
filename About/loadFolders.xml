@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<loadFolders>
+  <!-- For 1.6, load the shared root then the versioned folder (with our compiled assembly). -->
+  <v1.6>
+    <li>/</li>
+    <li>1.6</li>
+  </v1.6>
+</loadFolders>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MainButtonDef>
+    <defName>RimDoctor</defName>
+    <label>rimdoctor</label>
+    <description>Open RimDoctor: load-order sorter, content health scanner, and Log Doctor.</description>
+    <tabWindowClass>RimDoctor.MainTabWindow_RimDoctor</tabWindowClass>
+    <order>120</order>
+    <validWithoutMap>true</validWithoutMap>
+    <minimized>true</minimized>
+  </MainButtonDef>
+</Defs>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <!--
+    RimDoctor build paths — detected & confirmed 2026-06-17 on this Mac.
+    These point at the user's RimWorld install; the DLLs are NOT committed.
+    If you move your RimWorld install, edit RimWorldManagedDir / HarmonyDll below.
+  -->
+  <PropertyGroup>
+    <!-- RimWorld 1.6.4850 managed assemblies (Steam, macOS) -->
+    <RimWorldManagedDir>$(HOME)/Library/Application Support/Steam/steamapps/common/RimWorld/RimWorldMac.app/Contents/Resources/Data/Managed</RimWorldManagedDir>
+
+    <!-- Harmony ships with the brrainz.harmony Workshop mod (2009463077); we reference, never bundle -->
+    <HarmonyDll>$(HOME)/Library/Application Support/Steam/steamapps/workshop/content/294100/2009463077/Current/Assemblies/0Harmony.dll</HarmonyDll>
+
+    <!-- Where the built DLL is dropped: <ModRoot>/1.6/Assemblies/ -->
+    <ModRoot>$(MSBuildThisFileDirectory)</ModRoot>
+    <AssemblyOutputDir>$(ModRoot)1.6/Assemblies</AssemblyOutputDir>
+  </PropertyGroup>
+</Project>
