@@ -122,6 +122,21 @@ namespace RimDoctor
                         });
                 }
 
+                // --- Outdated mods (not marked for the current game version) ---
+                foreach (var c in CompatibilityScanner.Scan())
+                    items.Add(new ActionItem
+                    {
+                        severity = ActionSeverity.High,
+                        source = "Version",
+                        title = $"Not updated for {CompatibilityScanner.CurrentVersionLabel}: {c.modName}",
+                        detail = $"About.xml supports: {c.supportedVersions}. Mods built for an older version "
+                               + "often half-load and throw cryptic errors.",
+                        culpritMod = c.modName,
+                        suggestion = c.unknown
+                            ? "No versions listed — check the mod page; it may be abandoned or need a 1.6 update."
+                            : "Update the mod (Workshop), find a 1.6 fork/continued version, or disable it."
+                    });
+
                 // --- Harmony conflicts ---
                 if (harmony != null)
                 {
