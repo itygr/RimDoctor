@@ -3,6 +3,7 @@
   "version": 1,
   "rules": {
     "ludeon.rimworld": { "loadAfter": ["brrainz.harmony"], "loadBefore": [] },
+    "tyler.rimdoctor": { "loadAfter": ["brrainz.harmony", "ludeon.rimworld"], "loadBefore": [] },
     "unlimitedhugs.hugslib": { "loadAfter": ["brrainz.harmony", "ludeon.rimworld"], "loadBefore": [] },
     "oskarpotocki.vanillafactionsexpanded.core": { "loadAfter": ["ludeon.rimworld"], "loadBefore": [] },
     "vanillaexpanded.vanillaframeworkexpanded": { "loadAfter": ["ludeon.rimworld"], "loadBefore": [] },

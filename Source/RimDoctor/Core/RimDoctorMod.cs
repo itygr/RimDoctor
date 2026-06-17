@@ -78,7 +78,12 @@ namespace RimDoctor
                 RDLog.Exception("Harmony bootstrap failed — RimDoctor patches disabled", e);
             }
 
-            RDLog.Msg("Loaded.");
+            // Install log capture + rule data as early as possible so RimDoctor
+            // records errors from the rest of the load sequence (other mods included).
+            try { RimDoctorStartup.EnsureEarlyInit(); }
+            catch (Exception e) { RDLog.Exception("Early init failed", e); }
+
+            RDLog.Msg("Constructor completed.");
         }
 
         public override string SettingsCategory() => "RimDoctor";

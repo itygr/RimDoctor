@@ -20,6 +20,9 @@ namespace RimDoctor
         Harmony = 0,
         Core = 10,
         Dlc = 20,
+        // RimDoctor itself: load right after Harmony/Core/DLC but before other mods,
+        // so its patches + log/texture capture are active before anything else runs.
+        RimDoctorSelf = 25,
         Framework = 30,
         Race = 40,
         Content = 50,
@@ -54,6 +57,7 @@ namespace RimDoctor
                 if (id == "brrainz.harmony") return Tier.Harmony;
                 if (mod.IsCoreMod) return Tier.Core;
                 if (mod.Official) return Tier.Dlc; // Royalty/Ideology/Biotech/Anomaly/Odyssey
+                if (id == "tyler.rimdoctor") return Tier.RimDoctorSelf; // load early to capture everything
 
                 if (CombatExtended.Contains(id) || name.Contains("combat extended")) return Tier.CombatExtended;
                 if (PawnEditors.Contains(id) || name.Contains("character editor") || name.Contains("prepare carefully"))
@@ -90,6 +94,7 @@ namespace RimDoctor
                 case Tier.Harmony: return "Harmony";
                 case Tier.Core: return "Core";
                 case Tier.Dlc: return "DLC";
+                case Tier.RimDoctorSelf: return "RimDoctor (early utility)";
                 case Tier.Framework: return "library/framework";
                 case Tier.Race: return "race";
                 case Tier.Content: return "content";

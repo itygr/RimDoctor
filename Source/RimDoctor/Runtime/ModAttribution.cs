@@ -28,6 +28,11 @@ namespace RimDoctor
                 if (string.IsNullOrEmpty(texturePath))
                     return null;
 
+                // Reading mod content holders is not thread-safe. The Unity log hook
+                // fires off the main thread, so bail out to a safe null there.
+                if (!UnityData.IsInMainThread)
+                    return null;
+
                 var mods = LoadedModManager.RunningModsListForReading;
                 if (mods == null)
                     return null;
@@ -82,6 +87,8 @@ namespace RimDoctor
             {
                 if (string.IsNullOrEmpty(text))
                     return null;
+                if (!UnityData.IsInMainThread)
+                    return null; // threaded log hook — avoid touching mod state off-thread
                 var mods = LoadedModManager.RunningModsListForReading;
                 if (mods == null)
                     return null;

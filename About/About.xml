@@ -23,7 +23,15 @@ RimDoctor fails safe: if it errors, it disables the affected feature and never b
       <downloadUrl>https://github.com/pardeike/HarmonyRimWorld/releases/latest</downloadUrl>
     </li>
   </modDependencies>
+  <!-- Load right after Harmony + Core/DLC so RimDoctor's patches and log/texture
+       capture are active before any other mod runs (lets it catch their errors). -->
   <loadAfter>
     <li>brrainz.harmony</li>
+    <li>ludeon.rimworld</li>
+    <li>ludeon.rimworld.royalty</li>
+    <li>ludeon.rimworld.ideology</li>
+    <li>ludeon.rimworld.biotech</li>
+    <li>ludeon.rimworld.anomaly</li>
+    <li>ludeon.rimworld.odyssey</li>
   </loadAfter>
 </ModMetaData>

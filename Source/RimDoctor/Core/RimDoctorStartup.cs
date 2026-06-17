@@ -5,22 +5,33 @@ using Verse;
 namespace RimDoctor
 {
     /// <summary>
-    /// One-time startup wiring that must run after the game has loaded mods and
-    /// Unity is alive. [StaticConstructorOnStartup] runs after defs load — perfect
-    /// for loading rule DBs and registering the Unity log hook.
+    /// RimDoctor boot wiring. Split into:
+    ///   • EnsureEarlyInit() — runs from the Mod constructor (as early as possible)
+    ///     so log capture is live for the WHOLE load sequence, letting RimDoctor
+    ///     record errors from OTHER mods as they load. Idempotent + fully guarded.
+    ///   • the [StaticConstructorOnStartup] below — runs after defs load; re-ensures
+    ///     init (belt-and-suspenders) and writes a "load completed" marker so that
+    ///     if the game later fails, the log proves RimDoctor finished cleanly and
+    ///     was not the cause.
     ///
-    /// Everything here is guarded: a failure disables only the affected feature.
+    /// Every step is individually guarded: a failure disables only that step and
+    /// never propagates into RimWorld's load.
     /// </summary>
-    [StaticConstructorOnStartup]
     public static class RimDoctorStartup
     {
-        static RimDoctorStartup()
+        private static bool earlyInitDone;
+        private static bool unityHookRegistered;
+
+        /// <summary>Idempotent early init — safe to call multiple times.</summary>
+        public static void EnsureEarlyInit()
         {
-            // Load advice rules for the Log Doctor.
+            if (earlyInitDone) return;
+            earlyInitDone = true;
+
+            // Load rule data first so errors captured during load can be explained.
             try { LogAdviceDatabase.LoadOrReload(); }
             catch (Exception e) { RDLog.Exception("Loading advice DB failed", e); }
 
-            // Load community sorting rules for the load-order sorter.
             try { CommunityRules.LoadOrReload(); }
             catch (Exception e) { RDLog.Exception("Loading community rules failed", e); }
 
@@ -29,8 +40,12 @@ namespace RimDoctor
             // This callback can fire off the main thread — Capture() does no Unity work.
             try
             {
-                Application.logMessageReceivedThreaded += OnUnityLog;
-                RDLog.Msg("Registered Unity log hook for Log Doctor.");
+                if (!unityHookRegistered)
+                {
+                    Application.logMessageReceivedThreaded += OnUnityLog;
+                    unityHookRegistered = true;
+                    RDLog.Msg("Registered Unity log hook (early) for Log Doctor.");
+                }
             }
             catch (Exception e)
             {
@@ -40,12 +55,6 @@ namespace RimDoctor
 
         private static void OnUnityLog(string condition, string stackTrace, LogType type)
         {
-            // Verse.Log routes through here too; the Verse.Log postfixes already
-            // captured those. To avoid double-counting we only take messages that
-            // Verse.Log does NOT emit: the raw Unity warnings/errors. Verse.Log
-            // messages are tagged by RimWorld's own handler, but the cheapest
-            // reliable filter is the dedup in LogDoctor.Capture — identical text
-            // collapses to one entry regardless of source.
             switch (type)
             {
                 case LogType.Error:
@@ -57,6 +66,24 @@ namespace RimDoctor
                     LogDoctor.Capture(LogSeverity.Warning, condition, stackTrace);
                     break;
                 // Ignore LogType.Log (normal messages) from Unity — too noisy.
+            }
+        }
+
+        [StaticConstructorOnStartup]
+        private static class PostLoad
+        {
+            static PostLoad()
+            {
+                try
+                {
+                    EnsureEarlyInit(); // in case the Mod ctor path didn't run for some reason
+                    RDLog.Msg($"Load completed cleanly. Log Doctor: {LogAdviceDatabase.RuleCount} rule(s); " +
+                              $"{LogDoctor.IssueCount} issue(s) captured during load.");
+                }
+                catch (Exception e)
+                {
+                    RDLog.Exception("PostLoad marker failed", e);
+                }
             }
         }
     }
