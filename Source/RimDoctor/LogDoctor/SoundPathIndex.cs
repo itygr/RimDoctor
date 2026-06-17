@@ -23,6 +23,27 @@ namespace RimDoctor
         public static bool Ready { get; private set; }
         public static int Count => clipPaths.Count + folderPaths.Count;
 
+        /// <summary>
+        /// Build the index on the main thread the first time it's needed, IF sound
+        /// defs are loaded yet. Safe to call repeatedly — only builds once. Used so
+        /// load-time sound probes are classified benign at capture time (before they
+        /// reach the log file / dev console), not just retroactively.
+        /// </summary>
+        public static void EnsureReady()
+        {
+            if (Ready) return;
+            try
+            {
+                if (!UnityData.IsInMainThread) return;          // enumerate defs only on main thread
+                if (DefDatabase<SoundDef>.DefCount <= 0) return; // sound defs not loaded yet — try later
+                Build();
+            }
+            catch (Exception e)
+            {
+                RDLog.Exception("SoundPathIndex.EnsureReady failed", e);
+            }
+        }
+
         public static void Build()
         {
             try
@@ -30,7 +51,7 @@ namespace RimDoctor
                 clipPaths.Clear();
                 folderPaths.Clear();
                 var defs = DefDatabase<SoundDef>.AllDefsListForReading;
-                if (defs == null) { Ready = true; return; }
+                if (defs == null) { return; }
 
                 foreach (var sd in defs)
                 {
@@ -52,8 +73,11 @@ namespace RimDoctor
             }
             catch (Exception e)
             {
-                RDLog.Exception("SoundPathIndex.Build failed", e);
-                Ready = true; // don't retry forever; just won't classify these as benign
+                // Likely "collection modified" if called mid-load — clear partial
+                // data and leave Ready=false so a later call (post-load) completes it.
+                RDLog.Exception("SoundPathIndex.Build failed (will retry)", e);
+                clipPaths.Clear();
+                folderPaths.Clear();
             }
         }
 

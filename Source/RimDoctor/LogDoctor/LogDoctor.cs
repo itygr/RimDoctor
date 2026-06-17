@@ -168,9 +168,12 @@ namespace RimDoctor
                         bool benign = rule.benign;
                         // Sound paths probed as textures are benign engine noise — detect
                         // precisely by checking the captured path against the SoundDef index.
-                        if (!benign && rule.attributionHint == "texturePath" && m.Groups.Count > 1
-                            && SoundPathIndex.IsSoundPath(m.Groups[1].Value.Trim().Trim('\'')))
-                            benign = true;
+                        if (!benign && rule.attributionHint == "texturePath" && m.Groups.Count > 1)
+                        {
+                            SoundPathIndex.EnsureReady(); // lazy-build now so we classify at capture time
+                            if (SoundPathIndex.IsSoundPath(m.Groups[1].Value.Trim().Trim('\'')))
+                                benign = true;
+                        }
                         entry.isBenign = benign;
                         if (!benign)
                             entry.culpritMod = Attribute(rule, m, full);
