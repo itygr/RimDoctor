@@ -59,6 +59,44 @@ namespace RimDoctor
             }
         }
 
+        /// <summary>
+        /// After the SoundPathIndex is built (post-def-load), move any already-
+        /// captured "missing texture" entries whose path is actually a sound path
+        /// into the benign quarantine. Needed because those probes are logged
+        /// during load, before the index exists.
+        /// </summary>
+        public static void ReclassifySoundProbes()
+        {
+            try
+            {
+                lock (gate)
+                {
+                    for (int i = ordered.Count - 1; i >= 0; i--)
+                    {
+                        var e = ordered[i];
+                        if (e.advice == null || e.advice.attributionHint != "texturePath") continue;
+                        var m = e.advice.TryMatch(e.fullText);
+                        if (m == null || m.Groups.Count <= 1) continue;
+                        if (!SoundPathIndex.IsSoundPath(m.Groups[1].Value.Trim().Trim('\''))) continue;
+
+                        ordered.RemoveAt(i);
+                        byKey.Remove(e.DedupKey);
+                        e.isBenign = true;
+                        if (!benignByKey.ContainsKey(e.DedupKey))
+                        {
+                            benignByKey[e.DedupKey] = e;
+                            benignOrdered.Add(e);
+                        }
+                    }
+                    version++;
+                }
+            }
+            catch (Exception ex)
+            {
+                RDLog.Exception("ReclassifySoundProbes failed", ex);
+            }
+        }
+
         public static void Clear()
         {
             lock (gate)
@@ -127,8 +165,14 @@ namespace RimDoctor
                         var m = rule.TryMatch(full);
                         if (m == null) continue;
                         entry.advice = rule;
-                        entry.isBenign = rule.benign;
-                        if (!rule.benign)
+                        bool benign = rule.benign;
+                        // Sound paths probed as textures are benign engine noise — detect
+                        // precisely by checking the captured path against the SoundDef index.
+                        if (!benign && rule.attributionHint == "texturePath" && m.Groups.Count > 1
+                            && SoundPathIndex.IsSoundPath(m.Groups[1].Value.Trim().Trim('\'')))
+                            benign = true;
+                        entry.isBenign = benign;
+                        if (!benign)
                             entry.culpritMod = Attribute(rule, m, full);
                         break;
                     }

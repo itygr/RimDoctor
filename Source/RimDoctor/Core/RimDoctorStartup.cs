@@ -77,8 +77,12 @@ namespace RimDoctor
                 try
                 {
                     EnsureEarlyInit(); // in case the Mod ctor path didn't run for some reason
+                    // Index sound paths now that defs are loaded, so sound-path texture
+                    // probes get classified benign.
+                    SoundPathIndex.Build();
+                    LogDoctor.ReclassifySoundProbes(); // sweep load-time probes into benign
                     RDLog.Msg($"Load completed cleanly. Log Doctor: {LogAdviceDatabase.RuleCount} rule(s); " +
-                              $"{LogDoctor.IssueCount} issue(s) captured during load.");
+                              $"{LogDoctor.IssueCount} issue(s) to address, {LogDoctor.BenignCount} benign.");
                 }
                 catch (Exception e)
                 {
