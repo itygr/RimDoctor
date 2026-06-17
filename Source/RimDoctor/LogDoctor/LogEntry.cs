@@ -16,6 +16,10 @@ namespace RimDoctor
 
         public string DedupKey;          // signature used to collapse repeats
 
+        // UI: cached display height (computed once; -1 = not yet measured).
+        public float cachedHeight = -1f;
+        public float cachedForWidth = -1f;
+
         public bool HasAdvice => advice != null;
     }
 }

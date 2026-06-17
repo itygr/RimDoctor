@@ -38,6 +38,9 @@ namespace RimDoctor
 
         public static string FilePath => filePath;
 
+        /// <summary>Bumped on every write so the live-log panel only rebuilds its view when there's new output.</summary>
+        public static int Version { get { lock (gate) return seq; } }
+
         public static void Init()
         {
             try

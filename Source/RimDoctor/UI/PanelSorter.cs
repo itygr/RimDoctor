@@ -108,12 +108,14 @@ namespace RimDoctor
             // Diff list
             var listArea = new Rect(rect.x, topY, rect.width, rect.yMax - topY);
             var proposed = result.proposedOrder;
-            var view = new Rect(0, 0, listArea.width - 18f, Mathf.Max(proposed.Count * 24f, listArea.height));
+            const float rowH = 24f;
+            var view = new Rect(0, 0, listArea.width - 18f, Mathf.Max(proposed.Count * rowH, listArea.height));
             Widgets.BeginScrollView(listArea, ref scroll, view);
-            for (int i = 0; i < proposed.Count; i++)
+            UiUtil.VisibleRange(scroll.y, listArea.height, rowH, proposed.Count, out int first, out int last);
+            for (int i = first; i <= last; i++)
             {
                 var mod = proposed[i];
-                var row = new Rect(0, i * 24f, view.width, 24f);
+                var row = new Rect(0, i * rowH, view.width, rowH);
                 if (i % 2 == 0) Widgets.DrawLightHighlight(row);
 
                 int curIdx = result.currentPackageIds.IndexOf(mod.PackageId);

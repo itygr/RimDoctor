@@ -25,6 +25,16 @@ namespace RimDoctor
         private readonly HashSet<int> expanded = new HashSet<int>();
         private ActionSeverity minSeverity = ActionSeverity.Info;
 
+        // Cached views (rebuilt only on change, not every frame).
+        private int actionsStamp;                 // bumped when items/expansion change
+        private List<ActionItem> shownCache;
+        private float shownViewH;
+        private int shownStamp = -1;
+        private ActionSeverity shownMinSev = (ActionSeverity)(-99);
+        private float shownWidth = -1f;
+        private List<DiagLine> cachedLog;
+        private int cachedLogVersion = -1;
+
         public void OnSelected()
         {
             // Auto-populate the action list the first time the panel opens: run a
@@ -50,6 +60,7 @@ namespace RimDoctor
         {
             harmony = HarmonyInsight.Collect();
             items = DiagnosticsAggregator.BuildActionItems(harmony);
+            actionsStamp++; // invalidate the cached filtered view
             DiagnosticLog.Info("Diagnostics", $"Refreshed: {items.Count} action item(s), {harmony.conflicts.Count} harmony conflict(s).");
         }
 
@@ -128,20 +139,18 @@ namespace RimDoctor
             Text.Font = GameFont.Small;
 
             var listArea = new Rect(rect.x, sumRect.yMax + 4f, rect.width, rect.yMax - (sumRect.yMax + 4f));
+            float contentWidth = listArea.width - 18f;
+            EnsureActionsCache(contentWidth);
+            var shown = shownCache;
 
-            var shown = new List<ActionItem>();
-            foreach (var it in items)
-                if ((int)it.severity >= (int)minSeverity) shown.Add(it);
-
-            float viewH = 0f;
-            for (int i = 0; i < shown.Count; i++) viewH += RowHeight(shown[i], i);
-            var v = new Rect(0, 0, listArea.width - 18f, Mathf.Max(viewH, listArea.height));
+            var v = new Rect(0, 0, contentWidth, Mathf.Max(shownViewH, listArea.height));
             Widgets.BeginScrollView(listArea, ref scroll, v);
             float y = 0f;
             for (int i = 0; i < shown.Count; i++)
             {
-                float h = RowHeight(shown[i], i);
-                DrawActionRow(new Rect(0, y, v.width, h), shown[i], i);
+                float h = RowHeight(shown[i], i, contentWidth);
+                if (UiUtil.RowVisible(y, h, scroll.y, listArea.height))
+                    DrawActionRow(new Rect(0, y, v.width, h), shown[i], i);
                 y += h;
             }
             if (shown.Count == 0)
@@ -150,12 +159,34 @@ namespace RimDoctor
             Widgets.EndScrollView();
         }
 
-        private float RowHeight(ActionItem it, int i)
+        // Rebuild the filtered list + total height only when the underlying items,
+        // the severity filter, the expansion set, or the width change.
+        private void EnsureActionsCache(float width)
+        {
+            if (shownCache != null && shownStamp == actionsStamp && shownMinSev == minSeverity
+                && Mathf.Approximately(shownWidth, width))
+                return;
+
+            shownCache = new List<ActionItem>();
+            foreach (var it in items)
+                if ((int)it.severity >= (int)minSeverity) shownCache.Add(it);
+
+            shownViewH = 0f;
+            for (int i = 0; i < shownCache.Count; i++)
+                shownViewH += RowHeight(shownCache[i], i, width);
+
+            shownStamp = actionsStamp;
+            shownMinSev = minSeverity;
+            shownWidth = width;
+        }
+
+        private float RowHeight(ActionItem it, int i, float width)
         {
             float h = 28f;
             if (expanded.Contains(i))
             {
-                if (!string.IsNullOrEmpty(it.detail)) h += Text.CalcHeight(it.detail, 920f);
+                // Measure at the SAME width DrawActionRow renders the detail (r.width - 26f).
+                if (!string.IsNullOrEmpty(it.detail)) h += Text.CalcHeight(it.detail, width - 26f);
                 if (!string.IsNullOrEmpty(it.suggestion)) h += 22f;
                 if (!string.IsNullOrEmpty(it.culpritMod)) h += 22f;
                 h += 6f;
@@ -170,6 +201,7 @@ namespace RimDoctor
             if (Widgets.ButtonInvisible(header))
             {
                 if (!expanded.Remove(i)) expanded.Add(i);
+                actionsStamp++; // expansion changes row heights → rebuild cached view
             }
 
             GUI.color = SevColor(it.severity);
@@ -207,16 +239,23 @@ namespace RimDoctor
 
         private void DrawLog(Rect rect)
         {
-            var lines = DiagnosticLog.Snapshot();
-            var v = new Rect(0, 0, rect.width - 18f, Mathf.Max(lines.Count * 18f, rect.height));
+            int logV = DiagnosticLog.Version;
+            if (cachedLog == null || logV != cachedLogVersion)
+            {
+                cachedLog = DiagnosticLog.Snapshot();
+                cachedLogVersion = logV;
+            }
+            var lines = cachedLog;
+            const float rowH = 18f;
+            var v = new Rect(0, 0, rect.width - 18f, Mathf.Max(lines.Count * rowH, rect.height));
             Widgets.BeginScrollView(rect, ref logScroll, v);
             Text.Font = GameFont.Tiny;
-            float y = 0f;
-            foreach (var l in lines)
+            UiUtil.VisibleRange(logScroll.y, rect.height, rowH, lines.Count, out int first, out int last);
+            for (int i = first; i <= last; i++)
             {
+                var l = lines[i];
                 GUI.color = LevelColor(l.level);
-                Widgets.Label(new Rect(0, y, v.width, 18f), $"{l.stamp} [{l.category}] {l.message}");
-                y += 18f;
+                Widgets.Label(new Rect(0, i * rowH, v.width, rowH), $"{l.stamp} [{l.category}] {l.message}");
             }
             GUI.color = Color.white;
             Text.Font = GameFont.Small;

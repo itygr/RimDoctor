@@ -81,7 +81,8 @@ namespace RimDoctor
             foreach (var rep in reports)
             {
                 float h = RowHeight(rep);
-                DrawRow(new Rect(0, y, view.width, h), rep);
+                if (UiUtil.RowVisible(y, h, scroll.y, listArea.height))
+                    DrawRow(new Rect(0, y, view.width, h), rep);
                 y += h;
             }
             if (reports.Count == 0)

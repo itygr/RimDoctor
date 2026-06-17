@@ -18,7 +18,34 @@ namespace RimDoctor
         private string filter = "";
         private bool onlyWithAdvice;
 
+        // Cached view — rebuilt only when the captured set, filter, flags, or width
+        // change (not every frame). IMGUI repaints continuously, so copying +
+        // filtering the whole list each frame would be pure GC churn.
+        private List<LogEntry> cachedEntries;
+        private float cachedViewHeight;
+        private int cacheVersion = -1;
+        private string cacheFilter;
+        private bool cacheOnlyAdvice;
+        private float cacheWidth = -1f;
+
         public void OnSelected() { }
+
+        private void EnsureCache(float contentWidth)
+        {
+            int v = LogDoctor.Version;
+            if (cachedEntries != null && v == cacheVersion && cacheOnlyAdvice == onlyWithAdvice
+                && cacheFilter == filter && Mathf.Approximately(cacheWidth, contentWidth))
+                return;
+
+            cachedEntries = Filtered(LogDoctor.Snapshot());
+            cachedViewHeight = 0f;
+            foreach (var e in cachedEntries) cachedViewHeight += RowHeight(e, contentWidth);
+
+            cacheVersion = v;
+            cacheFilter = filter;
+            cacheOnlyAdvice = onlyWithAdvice;
+            cacheWidth = contentWidth;
+        }
 
         public void Draw(Rect rect)
         {
@@ -65,20 +92,19 @@ namespace RimDoctor
 
             // List
             var listArea = new Rect(rect.x, summary.yMax + 4f, rect.width, rect.yMax - (summary.yMax + 4f));
-            var entries = Filtered(LogDoctor.Snapshot());
-
-            float rowH = 0f;
-            // measure pass would be expensive; use a generous fixed estimate and dynamic height per row
-            var viewHeight = 0f;
-            foreach (var e in entries) viewHeight += RowHeight(e);
-            var view = new Rect(0, 0, listArea.width - 18f, Mathf.Max(viewHeight, listArea.height));
+            float contentWidth = listArea.width - 18f;
+            EnsureCache(contentWidth);
+            var entries = cachedEntries;
+            var view = new Rect(0, 0, contentWidth, Mathf.Max(cachedViewHeight, listArea.height));
 
             Widgets.BeginScrollView(listArea, ref scroll, view);
             float y = 0f;
             foreach (var e in entries)
             {
-                rowH = RowHeight(e);
-                DrawRow(new Rect(0, y, view.width, rowH), e);
+                float rowH = RowHeight(e, contentWidth);
+                // Cull: only draw rows intersecting the viewport (vanilla pattern).
+                if (UiUtil.RowVisible(y, rowH, scroll.y, listArea.height))
+                    DrawRow(new Rect(0, y, view.width, rowH), e);
                 y += rowH;
             }
             if (entries.Count == 0)
@@ -108,15 +134,22 @@ namespace RimDoctor
             return result;
         }
 
-        private float RowHeight(LogEntry e)
+        private float RowHeight(LogEntry e, float width)
         {
-            // header + message + (advice block if present) + culprit
-            float h = 24f + Text.CalcHeight(e.rawMessage ?? "", 940f);
+            // Cache the measured height — CalcHeight is expensive to run every frame.
+            if (e.cachedHeight >= 0f && Mathf.Approximately(e.cachedForWidth, width))
+                return e.cachedHeight;
+
+            float h = 24f + Text.CalcHeight(e.rawMessage ?? "", width - 8f);
             if (e.HasAdvice)
                 h += 22f * 3f + 6f;
             if (!string.IsNullOrEmpty(e.culpritMod))
                 h += 22f;
-            return h + 12f;
+            h += 12f;
+
+            e.cachedHeight = h;
+            e.cachedForWidth = width;
+            return h;
         }
 
         private void DrawRow(Rect r, LogEntry e)

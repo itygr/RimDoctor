@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  RimDoctor English keys. NOTE: strings that embed live counts (e.g. "12 missing
+  textures") are built at runtime via TranslateSafe's fallback and are deliberately
+  NOT listed here — adding a static key would drop the numbers. Only static labels
+  live in this file.
+-->
 <LanguageData>
-  <!-- Settings window -->
+  <!-- Main button -->
+  <rimdoctor>RimDoctor</rimdoctor>
+
+  <!-- Tabs -->
+  <RimDoctor.Tab.Sorter>Load Order</RimDoctor.Tab.Sorter>
+  <RimDoctor.Tab.Health>Content Health</RimDoctor.Tab.Health>
+  <RimDoctor.Tab.LogDoctor>Log Doctor</RimDoctor.Tab.LogDoctor>
+  <RimDoctor.Tab.Diag>Diagnostics</RimDoctor.Tab.Diag>
+  <RimDoctor.Panel.Error>This panel hit an error and was disabled for safety. See the log.</RimDoctor.Panel.Error>
+
+  <!-- Settings -->
   <RimDoctor.Settings.Header>Runtime protection</RimDoctor.Settings.Header>
   <RimDoctor.Settings.TextureFallback>Prevent missing-texture crashes (texture fallback)</RimDoctor.Settings.TextureFallback>
   <RimDoctor.Settings.TextureFallback.Tip>Substitutes a generated placeholder for any texture that fails to load, instead of returning null (which freezes/crashes screens). Headline feature — recommended ON.</RimDoctor.Settings.TextureFallback.Tip>
@@ -10,7 +26,52 @@
   <RimDoctor.Settings.Tier.Report>Report only — change nothing</RimDoctor.Settings.Tier.Report>
   <RimDoctor.Settings.Tier.Safe>Safe auto-fix — non-destructive (via override mod)</RimDoctor.Settings.Tier.Safe>
   <RimDoctor.Settings.Tier.Max>Maximum — rewrite/disable broken defs (via override mod)</RimDoctor.Settings.Tier.Max>
+  <RimDoctor.Settings.ReloadData>Reload rule data files (logAdvice + communityRules)</RimDoctor.Settings.ReloadData>
 
-  <!-- Main tab -->
-  <rimdoctor>RimDoctor</rimdoctor>
+  <!-- Load Order panel -->
+  <RimDoctor.Sorter.Sort>Sort now</RimDoctor.Sorter.Sort>
+  <RimDoctor.Sorter.Apply>Apply &amp; Restart</RimDoctor.Sorter.Apply>
+  <RimDoctor.Sorter.Export>Export</RimDoctor.Sorter.Export>
+  <RimDoctor.Sorter.RefreshRules>Refresh rules</RimDoctor.Sorter.RefreshRules>
+  <RimDoctor.Sorter.Prompt>Press 'Sort now' to compute a proposed load order.</RimDoctor.Sorter.Prompt>
+  <RimDoctor.Sorter.Same>Your current order already matches the proposed order.</RimDoctor.Sorter.Same>
+  <RimDoctor.Sorter.ApplyFail>Apply failed — load order unchanged (see log).</RimDoctor.Sorter.ApplyFail>
+  <RimDoctor.Sorter.ExportFail>Export failed (see log).</RimDoctor.Sorter.ExportFail>
+  <RimDoctor.Sorter.Confirm>Apply the proposed load order and restart RimWorld now?\n\n• ModsConfig.xml will be backed up first.\n• The game will close and relaunch with the new order.\n• Save your game before continuing if needed.</RimDoctor.Sorter.Confirm>
+
+  <!-- Content Health panel -->
+  <RimDoctor.Health.Scan>Scan now</RimDoctor.Health.Scan>
+  <RimDoctor.Health.Export>Copy report</RimDoctor.Health.Export>
+  <RimDoctor.Health.HideClean>Hide clean</RimDoctor.Health.HideClean>
+  <RimDoctor.Health.Prompt>Press 'Scan now' to check all active mods for missing textures and incomplete downloads.</RimDoctor.Health.Prompt>
+  <RimDoctor.Health.AllClean>Nothing to show. Everything scanned looks clean!</RimDoctor.Health.AllClean>
+  <RimDoctor.Health.Copied>Health report copied to clipboard.</RimDoctor.Health.Copied>
+  <RimDoctor.Health.Repair>Run repairs</RimDoctor.Health.Repair>
+  <RimDoctor.Health.Undo>Undo last repair</RimDoctor.Health.Undo>
+  <RimDoctor.Health.Undone>Removed the generated RimDoctor Overrides mod. Restart to apply.</RimDoctor.Health.Undone>
+  <RimDoctor.Health.NothingUndo>Nothing to undo (no generated override mod found).</RimDoctor.Health.NothingUndo>
+  <RimDoctor.Health.Tier>Repair tier: </RimDoctor.Health.Tier>
+  <RimDoctor.Health.TierHint>(change in Mod Settings)</RimDoctor.Health.TierHint>
+  <RimDoctor.Health.RestartPrompt>Repairs written. Enable 'RimDoctor Overrides' and restart RimWorld now?\n\nRimWorld only loads mods at startup, so the fixes take effect after a restart. RimDoctor will enable the override mod (it loads last) for you.</RimDoctor.Health.RestartPrompt>
+
+  <!-- Log Doctor panel -->
+  <RimDoctor.LogDoctor.Copy>Copy report</RimDoctor.LogDoctor.Copy>
+  <RimDoctor.LogDoctor.Reload>Reload rules</RimDoctor.LogDoctor.Reload>
+  <RimDoctor.LogDoctor.Clear>Clear</RimDoctor.LogDoctor.Clear>
+  <RimDoctor.LogDoctor.OnlyAdvice>Only explained</RimDoctor.LogDoctor.OnlyAdvice>
+  <RimDoctor.LogDoctor.Copied>Log Doctor report copied to clipboard.</RimDoctor.LogDoctor.Copied>
+  <RimDoctor.LogDoctor.Meaning>Meaning: </RimDoctor.LogDoctor.Meaning>
+  <RimDoctor.LogDoctor.Cause>Likely cause: </RimDoctor.LogDoctor.Cause>
+  <RimDoctor.LogDoctor.Fix>Fix: </RimDoctor.LogDoctor.Fix>
+  <RimDoctor.LogDoctor.Culprit>Likely culprit: </RimDoctor.LogDoctor.Culprit>
+  <RimDoctor.LogDoctor.None>No issues captured yet. Errors and warnings will appear here as they occur.</RimDoctor.LogDoctor.None>
+
+  <!-- Diagnostics panel -->
+  <RimDoctor.Diag.Refresh>Refresh</RimDoctor.Diag.Refresh>
+  <RimDoctor.Diag.Copy>Copy report</RimDoctor.Diag.Copy>
+  <RimDoctor.Diag.Copied>Full diagnostic report copied to clipboard.</RimDoctor.Diag.Copied>
+  <RimDoctor.Diag.Save>Save report</RimDoctor.Diag.Save>
+  <RimDoctor.Diag.SaveFail>Save failed (see log).</RimDoctor.Diag.SaveFail>
+  <RimDoctor.Diag.OpenFolder>Open log folder</RimDoctor.Diag.OpenFolder>
+  <RimDoctor.Diag.Clean>Nothing at this severity. Run a Health scan + Sort for the fullest picture.</RimDoctor.Diag.Clean>
 </LanguageData>

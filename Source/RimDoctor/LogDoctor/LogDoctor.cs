@@ -19,8 +19,16 @@ namespace RimDoctor
         private static readonly Dictionary<string, LogEntry> byKey = new Dictionary<string, LogEntry>();
         private static readonly List<LogEntry> ordered = new List<LogEntry>(); // newest last
         private static int frameCounter;
+        private static int version;
 
         public static int IssueCount { get { lock (gate) return ordered.Count; } }
+
+        /// <summary>
+        /// Bumped whenever the captured set changes. UI panels compare this against
+        /// their last-built value so they only rebuild their (sorted/filtered) view
+        /// when something actually changed — not every frame.
+        /// </summary>
+        public static int Version { get { lock (gate) return version; } }
 
         /// <summary>Snapshot of entries, newest first.</summary>
         public static List<LogEntry> Snapshot()
@@ -39,6 +47,7 @@ namespace RimDoctor
             {
                 byKey.Clear();
                 ordered.Clear();
+                version++;
             }
         }
 
@@ -70,6 +79,7 @@ namespace RimDoctor
                     if (byKey.TryGetValue(key, out var existing))
                     {
                         existing.occurrences++;
+                        version++; // (xN) count changed
                         return;
                     }
 
@@ -97,6 +107,7 @@ namespace RimDoctor
 
                     byKey[key] = entry;
                     ordered.Add(entry);
+                    version++;
 
                     // Mirror each NEW unique game-log issue into RimDoctor's persistent
                     // session log so the on-disk log captures game errors too (not just
