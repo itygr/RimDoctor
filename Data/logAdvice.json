@@ -1,0 +1,87 @@
+{
+  "_comment": "RimDoctor Log Doctor advice rules. Hot-reloadable from the Log Doctor window. Each rule matches a log message via a .NET regex (case-insensitive). 'attributionHint' chooses how to guess the culprit mod: 'texturePath' = first capture group is a texture path; 'modName' = first capture group is a mod name/assembly; 'none' = no auto-attribution. Rules are tested top-to-bottom; first match wins.",
+  "version": 1,
+  "rules": [
+    {
+      "id": "missing-texture",
+      "pattern": "Could not load (?:UnityEngine\\.)?Texture2D at '?(.+?)'? in any active mod",
+      "severity": "Warning",
+      "meaning": "A texture file a mod asked for does not exist on disk.",
+      "likelyCause": "The mod's texture is missing or was not fully downloaded by Steam.",
+      "suggestedFix": "Re-subscribe / verify the owning mod's files. RimDoctor's texture fallback already prevents this from crashing — a magenta placeholder is shown instead.",
+      "attributionHint": "texturePath"
+    },
+    {
+      "id": "could-not-load-texture-generic",
+      "pattern": "Could not load (?:UnityEngine\\.)?Texture2D at (.+)",
+      "severity": "Warning",
+      "meaning": "A texture failed to load.",
+      "likelyCause": "Missing or corrupt texture file in a mod.",
+      "suggestedFix": "Re-subscribe / verify the owning mod. Texture fallback shows a placeholder so the game keeps running.",
+      "attributionHint": "texturePath"
+    },
+    {
+      "id": "null-texture-drawtexture",
+      "pattern": "null texture passed to GUI\\.DrawTexture",
+      "severity": "Error",
+      "meaning": "A UI is trying to draw a texture that is null — every frame.",
+      "likelyCause": "A mod's UI references a texture that failed to load; this usually freezes the screen it appears on.",
+      "suggestedFix": "Enable RimDoctor's texture fallback (Mod Settings → RimDoctor) — it substitutes a placeholder and stops the freeze. If a specific screen still misbehaves, disable the owning mod.",
+      "attributionHint": "none"
+    },
+    {
+      "id": "vbe-getbgrect",
+      "pattern": "NullReferenceException.*VBE\\.Utils\\.GetBGRect",
+      "severity": "Error",
+      "meaning": "Vanilla Backgrounds Expanded can't load a main-menu background image.",
+      "likelyCause": "A background texture VBE expects is missing, so the menu draw throws.",
+      "suggestedFix": "Reset Vanilla Backgrounds Expanded's settings, or disable it. RimDoctor's texture fallback also mitigates the missing image.",
+      "attributionHint": "none"
+    },
+    {
+      "id": "genstuff-no-elements",
+      "pattern": "Sequence contains no elements.*GenStuff\\.DefaultStuffFor",
+      "severity": "Warning",
+      "meaning": "A buildable thing has no valid 'stuff' material to be made from.",
+      "likelyCause": "A mod def bug — the thing is marked stuffable but no material category matches.",
+      "suggestedFix": "Usually harmless logspam. If it floods the log, report it to the owning mod. Not a crash on its own.",
+      "attributionHint": "none"
+    },
+    {
+      "id": "ce-recipe-probe",
+      "pattern": "Combat Extended :: .*(could not be found|found no recipe MakeAmmo_)",
+      "severity": "Message",
+      "meaning": "Combat Extended is probing for ammo recipes that don't exist for some weapons.",
+      "likelyCause": "Benign CE ammo-injection check.",
+      "suggestedFix": "Ignore — this is expected CE behavior, not an error.",
+      "attributionHint": "none"
+    },
+    {
+      "id": "missing-def-xref",
+      "pattern": "Could not resolve cross-reference: No (.+?) named (.+?) found",
+      "severity": "Warning",
+      "meaning": "A def refers to another def that doesn't exist.",
+      "likelyCause": "A required mod is missing/disabled, a load-order problem, or a typo in a mod's XML.",
+      "suggestedFix": "Check that the mod providing the referenced def is active and loads BEFORE the mod referencing it. RimDoctor's sorter can fix the order.",
+      "attributionHint": "none"
+    },
+    {
+      "id": "patch-failed",
+      "pattern": "(?:Patch operation|XML error).*(failed|could not find a node)",
+      "severity": "Warning",
+      "meaning": "A mod's XML patch (PatchOperation) didn't find its target.",
+      "likelyCause": "The patched mod changed, isn't loaded, or load order put the patch before its target.",
+      "suggestedFix": "Verify the target mod is active and loads first. Often safe to ignore if the feature still works.",
+      "attributionHint": "none"
+    },
+    {
+      "id": "duplicate-defname",
+      "pattern": "Adding duplicate (.+?) name: (.+)",
+      "severity": "Warning",
+      "meaning": "Two defs share the same name; the second overrides the first.",
+      "likelyCause": "Two mods define the same def, or a mod is loaded twice.",
+      "suggestedFix": "Usually intentional (a patch/override). If unexpected, check for duplicate or conflicting mods.",
+      "attributionHint": "none"
+    }
+  ]
+}

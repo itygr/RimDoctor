@@ -70,6 +70,57 @@ namespace RimDoctor
             }
         }
 
+        /// <summary>
+        /// Best-effort attribution from free text (a log message / stack trace):
+        /// returns the name of a running mod whose name or packageId appears in the
+        /// text, or null. Used by the Log Doctor when a rule has no path capture.
+        /// Prefers the longest match to avoid short-name false positives.
+        /// </summary>
+        public static string GuessOwnerFromText(string text)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(text))
+                    return null;
+                var mods = LoadedModManager.RunningModsListForReading;
+                if (mods == null)
+                    return null;
+
+                string best = null;
+                int bestLen = 0;
+                foreach (var mod in mods)
+                {
+                    if (mod == null) continue;
+                    // Skip core/official + RimDoctor itself to reduce noise.
+                    if (mod.IsCoreMod || mod.IsOfficialMod) continue;
+
+                    if (TextMentions(text, mod.Name) && mod.Name.Length > bestLen)
+                    {
+                        best = mod.Name; bestLen = mod.Name.Length;
+                    }
+                    string pid = mod.PackageId;
+                    if (!string.IsNullOrEmpty(pid) && pid.Length > bestLen &&
+                        text.IndexOf(pid, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        best = mod.Name; bestLen = pid.Length;
+                    }
+                }
+                return best;
+            }
+            catch (Exception e)
+            {
+                RDLog.Exception("GuessOwnerFromText failed", e);
+                return null;
+            }
+        }
+
+        private static bool TextMentions(string text, string name)
+        {
+            if (string.IsNullOrEmpty(name) || name.Length < 4)
+                return false; // too short to be a confident match
+            return text.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         private static string DirectoryOf(string path)
         {
             int i = path.LastIndexOf('/');

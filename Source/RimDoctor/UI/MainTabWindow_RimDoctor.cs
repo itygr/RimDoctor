@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Verse;
 using RimWorld;
@@ -6,33 +7,73 @@ using RimWorld;
 namespace RimDoctor
 {
     /// <summary>
-    /// The RimDoctor tab. In the foundation milestone this just confirms the mod
-    /// is alive and lists the sub-tools; Milestones 1/2/4 fill in the real panels
-    /// (sorter diff, health report, Log Doctor).
+    /// The RimDoctor tab. Hosts the tool panels (Sorter, Health, Log Doctor) with
+    /// a row of selector buttons at the top. Each panel is self-contained and
+    /// guarded so one panel's failure can't take down the window.
     /// </summary>
     public class MainTabWindow_RimDoctor : MainTabWindow
     {
-        public override Vector2 RequestedTabSize => new Vector2(900f, 700f);
+        public override Vector2 RequestedTabSize => new Vector2(1000f, 720f);
+
+        private static List<IRimDoctorPanel> panels;
+        private int active;
+
+        private static List<IRimDoctorPanel> Panels
+        {
+            get
+            {
+                if (panels == null)
+                {
+                    panels = new List<IRimDoctorPanel>
+                    {
+                        new PanelSorter(),
+                        new PanelHealth(),
+                        new PanelLogDoctor()
+                    };
+                }
+                return panels;
+            }
+        }
 
         public override void DoWindowContents(Rect inRect)
         {
             try
             {
-                var title = new Rect(inRect.x, inRect.y, inRect.width, 42f);
+                var title = new Rect(inRect.x, inRect.y, inRect.width, 36f);
                 Text.Font = GameFont.Medium;
                 Widgets.Label(title, "RimDoctor");
                 Text.Font = GameFont.Small;
 
-                var body = new Rect(inRect.x, title.yMax + 6f, inRect.width, inRect.height - title.height - 6f);
-                Widgets.Label(body,
-                    "RimDoctor.Tab.Foundation".TranslateSafe(
-                        "RimDoctor is loaded and running.\n\n" +
-                        "Tools (filling in milestone by milestone):\n" +
-                        "  • Load-order sorter — diff your current vs. a smart-sorted order, then Apply & Restart.\n" +
-                        "  • Content health scanner — find missing textures and broken/incomplete mods.\n" +
-                        "  • Texture fallback — already active: missing textures show a placeholder instead of crashing.\n" +
-                        "  • Log Doctor — explains errors in plain language with likely culprit + fix.\n\n" +
-                        "Open Mod Settings → RimDoctor to configure protection and repair tiers."));
+                // Tool selector buttons
+                float bx = inRect.x;
+                float by = title.yMax + 4f;
+                const float bw = 150f, bh = 32f;
+                var list = Panels;
+                for (int i = 0; i < list.Count; i++)
+                {
+                    var r = new Rect(bx + i * (bw + 6f), by, bw, bh);
+                    bool isActive = i == active;
+                    if (isActive) Widgets.DrawHighlightSelected(r);
+                    if (Widgets.ButtonText(r, list[i].Label))
+                    {
+                        active = i;
+                        try { list[i].OnSelected(); } catch (Exception e) { RDLog.Exception("Panel OnSelected failed", e); }
+                    }
+                }
+
+                var body = new Rect(inRect.x, by + bh + 8f, inRect.width, inRect.height - (by + bh + 8f - inRect.y));
+                Widgets.DrawMenuSection(body);
+                var inner = body.ContractedBy(10f);
+                try
+                {
+                    list[active].Draw(inner);
+                }
+                catch (Exception e)
+                {
+                    Widgets.Label(inner, "RimDoctor.Panel.Error".TranslateSafe(
+                        "This panel hit an error and was disabled for safety. See the log."));
+                    RDLog.Exception($"Panel '{list[active].Label}' draw failed", e);
+                }
             }
             catch (Exception e)
             {

@@ -25,9 +25,13 @@ namespace RimDoctor
         public const string HarmonyId = "tyler.rimdoctor";
         public static Harmony HarmonyInstance { get; private set; }
 
+        /// <summary>This mod's content pack — used to locate Data/ and the mod root on disk.</summary>
+        public static ModContentPack ContentPack { get; private set; }
+
         public RimDoctorMod(ModContentPack content) : base(content)
         {
             Instance = this;
+            ContentPack = content;
 
             // Settings load can fail on a corrupt file; never let that abort load.
             try
