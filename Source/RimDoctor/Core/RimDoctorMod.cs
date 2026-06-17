@@ -2,6 +2,7 @@ using System;
 using HarmonyLib;
 using UnityEngine;
 using Verse;
+using RimWorld;
 
 namespace RimDoctor
 {
@@ -44,17 +45,34 @@ namespace RimDoctor
                 settings = new RimDoctorSettings();
             }
 
-            // Patch in its own guard. If Harmony itself is missing/broken, RimDoctor
-            // silently does nothing rather than crashing the game.
+            // Patch each annotated class INDIVIDUALLY so a single failed target
+            // (e.g. a hot Unity method that can't be patched) disables only that
+            // one feature — never all of RimDoctor. If Harmony itself is missing,
+            // we silently do nothing rather than crashing the game.
             try
             {
                 HarmonyInstance = new Harmony(HarmonyId);
-                HarmonyInstance.PatchAll();
-                RDLog.Msg($"Harmony patches applied (id={HarmonyId}).");
+                int ok = 0, fail = 0;
+                foreach (var type in typeof(RimDoctorMod).Assembly.GetTypes())
+                {
+                    if (type.GetCustomAttributes(typeof(HarmonyPatch), true).Length == 0)
+                        continue;
+                    try
+                    {
+                        HarmonyInstance.CreateClassProcessor(type).Patch();
+                        ok++;
+                    }
+                    catch (Exception pe)
+                    {
+                        fail++;
+                        RDLog.Exception($"Patch class '{type.Name}' failed (that feature disabled)", pe);
+                    }
+                }
+                RDLog.Msg($"Harmony patches applied: {ok} ok, {fail} failed (id={HarmonyId}).");
             }
             catch (Exception e)
             {
-                RDLog.Exception("Harmony PatchAll failed — RimDoctor patches disabled", e);
+                RDLog.Exception("Harmony bootstrap failed — RimDoctor patches disabled", e);
             }
 
             RDLog.Msg("Loaded.");
@@ -96,6 +114,21 @@ namespace RimDoctor
                 if (l.RadioButton("RimDoctor.Settings.Tier.Max".TranslateSafe("Maximum — rewrite/disable broken defs (via override mod)"),
                         settings.repairTier == RepairTier.Maximum))
                     settings.repairTier = RepairTier.Maximum;
+
+                l.Gap();
+                l.Label("RimDoctor.Settings.Backups".TranslateSafe(
+                    $"Backup sets to keep: {settings.backupRetention}"));
+                settings.backupRetention = (int)l.Slider(settings.backupRetention, 1, 50);
+
+                l.Gap();
+                if (l.ButtonText("RimDoctor.Settings.ReloadData".TranslateSafe("Reload rule data files (logAdvice + communityRules)")))
+                {
+                    LogAdviceDatabase.LoadOrReload();
+                    CommunityRules.LoadOrReload();
+                    Messages.Message("RimDoctor.Settings.DataReloaded".TranslateSafe(
+                        $"Reloaded {LogAdviceDatabase.RuleCount} advice rule(s) and {CommunityRules.RuleCount} community rule(s)."),
+                        MessageTypeDefOf.TaskCompletion, false);
+                }
 
                 l.End();
             }

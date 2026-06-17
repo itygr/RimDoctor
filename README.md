@@ -38,8 +38,11 @@ Requires [Harmony](https://steamcommunity.com/sharedfiles/filedetails/?id=200946
 ## Status
 
 - [x] **Foundation** — scaffold, fail-safe Harmony bootstrap, settings, RimDoctor tab, clean build
-- [ ] M1 — Load-order sorter + manager UI
-- [ ] M3 — Runtime missing-texture fallback (headline)
-- [ ] M4 — Log Doctor
-- [ ] M2 — Content health scanner
-- [ ] M5 — Repair tiers + backups
+- [x] **M1** — Load-order sorter + manager UI (diff, warnings, Apply & Restart, import/export)
+- [x] **M3** — Runtime missing-texture fallback (headline anti-crash)
+- [x] **M4** — Log Doctor (capture, interpret, attribute, copy report)
+- [x] **M2** — Content health scanner (missing textures + incomplete-download detection)
+- [x] **M5** — Repair tiers (report / safe / maximum) via generated override mod, backups + undo
+
+All features are individually Harmony-patched and try/catch-guarded — a failure in
+any one disables only that feature and never blocks game startup.

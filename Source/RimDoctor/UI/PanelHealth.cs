@@ -51,8 +51,12 @@ namespace RimDoctor
             var filterRect = new Rect(rect.xMax - 230f, bar.y, 230f, 28f);
             filter = Widgets.TextField(filterRect, filter ?? "");
 
+            // Repair bar (row 2)
+            var rbar = new Rect(rect.x, bar.yMax + 4f, rect.width, 28f);
+            DrawRepairBar(rbar, result);
+
             // Summary
-            var summary = new Rect(rect.x, bar.yMax + 4f, rect.width, 22f);
+            var summary = new Rect(rect.x, rbar.yMax + 4f, rect.width, 22f);
             if (result == null)
             {
                 Widgets.Label(summary, "RimDoctor.Health.Prompt".TranslateSafe(
@@ -84,6 +88,85 @@ namespace RimDoctor
                 Widgets.Label(new Rect(0, 0, view.width, 40f),
                     "RimDoctor.Health.AllClean".TranslateSafe("Nothing to show. Everything scanned looks clean!"));
             Widgets.EndScrollView();
+        }
+
+        private string lastRepairNote;
+
+        private void DrawRepairBar(Rect rbar, HealthScanResult result)
+        {
+            var tier = RimDoctorMod.Instance?.Settings?.repairTier ?? RepairTier.ReportOnly;
+            float x = rbar.x;
+
+            GUI.color = new Color(0.8f, 0.8f, 0.8f);
+            Widgets.Label(new Rect(x, rbar.y + 3f, 230f, 24f),
+                "RimDoctor.Health.Tier".TranslateSafe("Repair tier: ") + TierLabel(tier)
+                + "  " + "RimDoctor.Health.TierHint".TranslateSafe("(change in Mod Settings)"));
+            GUI.color = Color.white;
+            x += 360f;
+
+            bool canRepair = result != null && tier != RepairTier.ReportOnly && result.MissingMods > 0;
+            GUI.color = canRepair ? new Color(0.6f, 1f, 0.6f) : Color.gray;
+            if (Widgets.ButtonText(new Rect(x, rbar.y, 150f, 26f),
+                    "RimDoctor.Health.Repair".TranslateSafe("Run repairs")) && result != null)
+                ConfirmRepair(tier, result);
+            GUI.color = Color.white;
+            x += 156f;
+
+            if (Widgets.ButtonText(new Rect(x, rbar.y, 150f, 26f),
+                    "RimDoctor.Health.Undo".TranslateSafe("Undo last repair")))
+            {
+                bool ok = RepairEngine.UndoLast();
+                lastRepairNote = ok
+                    ? "RimDoctor.Health.Undone".TranslateSafe("Removed the generated RimDoctor Overrides mod. Restart to apply.")
+                    : "RimDoctor.Health.NothingUndo".TranslateSafe("Nothing to undo (no generated override mod found).");
+                Messages.Message(lastRepairNote, MessageTypeDefOf.TaskCompletion, false);
+            }
+            x += 156f;
+
+            if (!string.IsNullOrEmpty(lastRepairNote))
+            {
+                Text.Font = GameFont.Tiny;
+                GUI.color = new Color(0.7f, 1f, 0.7f);
+                Widgets.Label(new Rect(x, rbar.y + 3f, rbar.xMax - x, 24f), lastRepairNote);
+                GUI.color = Color.white;
+                Text.Font = GameFont.Small;
+            }
+        }
+
+        private void ConfirmRepair(RepairTier tier, HealthScanResult result)
+        {
+            string msg = "RimDoctor.Health.ConfirmRepair".TranslateSafe(
+                $"Run {TierLabel(tier)} repairs?\n\n" +
+                "• Fixes are written ONLY into a generated 'RimDoctor Overrides' mod — your other mods are never touched.\n" +
+                "• Any existing override mod is backed up first.\n" +
+                "• You'll need to enable that mod (it loads last) and restart.");
+            Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(msg, () =>
+            {
+                var summary = RepairEngine.Run(tier, result);
+                lastRepairNote = string.Join("  ", summary.notes.ToArray());
+                if (summary.didWrite)
+                    PromptRestart();
+            }, destructive: false));
+        }
+
+        private void PromptRestart()
+        {
+            Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
+                "RimDoctor.Health.RestartPrompt".TranslateSafe(
+                    "Repairs written. Restart RimWorld now to load them?\n" +
+                    "(You may also need to enable 'RimDoctor Overrides' in your mod list first.)"),
+                () => { try { GenCommandLine.Restart(); } catch { } },
+                destructive: false));
+        }
+
+        private static string TierLabel(RepairTier t)
+        {
+            switch (t)
+            {
+                case RepairTier.SafeAutoFix: return "Safe auto-fix";
+                case RepairTier.Maximum: return "Maximum";
+                default: return "Report only";
+            }
         }
 
         private List<ModHealthReport> Filtered(List<ModHealthReport> all)
