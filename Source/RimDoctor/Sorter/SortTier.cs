@@ -31,15 +31,17 @@ namespace RimDoctor
 
     public static class SortTier
     {
-        // Known absolute-last pawn editors.
+        // Known absolute-last pawn editors (verified real packageIds).
         private static readonly HashSet<string> PawnEditors = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "void.charactereditor", "edbprepare.carefully", "edbprepare.carefully.steam"
+            "void.charactereditor",     // Character Editor
+            "edb.preparecarefully",     // EdB Prepare Carefully
+            "isorex.pawneditor"         // Pawn Editor (modern replacement)
         };
 
         private static readonly HashSet<string> CombatExtended = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "ceteam.combatextended", "ceteam.combatextended.steam"
+            "ceteam.combatextended"
         };
 
         public static Tier Of(ModMetaData mod)

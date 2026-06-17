@@ -15,7 +15,8 @@
     "petetimessix.simplesidearms": { "loadAfter": ["ceteam.combatextended"], "loadBefore": [] },
     "erdelf.humanoidalienraces": { "loadAfter": ["ludeon.rimworld", "brrainz.harmony"], "loadBefore": [] },
     "void.charactereditor": { "loadAfter": [], "loadBefore": [] },
-    "edbprepare.carefully": { "loadAfter": [], "loadBefore": [] },
+    "edb.preparecarefully": { "loadAfter": [], "loadBefore": [] },
+    "isorex.pawneditor": { "loadAfter": [], "loadBefore": [] },
     "fluffy.modmanager": { "loadAfter": ["brrainz.harmony"], "loadBefore": [] }
   }
 }
