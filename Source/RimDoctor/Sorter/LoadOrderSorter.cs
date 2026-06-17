@@ -15,6 +15,9 @@ namespace RimDoctor
     /// </summary>
     public static class LoadOrderSorter
     {
+        /// <summary>The most recent sort result, for the Diagnostics aggregator to read.</summary>
+        public static SortResult Last { get; private set; }
+
         private enum EdgeReason { Tier = 0, Community = 1, About = 2, Force = 3, Dependency = 4 }
 
         private class Node
@@ -111,6 +114,7 @@ namespace RimDoctor
             {
                 RDLog.Exception("Load-order sort failed", e);
             }
+            Last = result;
             return result;
         }
 

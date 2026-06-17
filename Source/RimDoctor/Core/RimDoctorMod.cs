@@ -34,6 +34,9 @@ namespace RimDoctor
             Instance = this;
             ContentPack = content;
 
+            // Start the persistent diagnostic log first so everything below is captured.
+            try { DiagnosticLog.Init(); } catch { /* logger must never block load */ }
+
             // Settings load can fail on a corrupt file; never let that abort load.
             try
             {

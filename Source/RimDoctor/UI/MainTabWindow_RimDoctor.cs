@@ -28,7 +28,8 @@ namespace RimDoctor
                     {
                         new PanelSorter(),
                         new PanelHealth(),
-                        new PanelLogDoctor()
+                        new PanelLogDoctor(),
+                        new PanelDiagnostics()
                     };
                 }
                 return panels;

@@ -70,5 +70,24 @@ namespace RimDoctor
                 return Path.Combine(root, "Backups");
             }
         }
+
+        /// <summary>
+        /// Folder for RimDoctor's own diagnostic logs + saved reports. Lives under
+        /// the user data dir (always writable, survives mod re-installs).
+        /// </summary>
+        public static string LogsFolder
+        {
+            get
+            {
+                var data = UserDataFolder;
+                if (string.IsNullOrEmpty(data))
+                {
+                    // Fall back to the mod root so we always have somewhere to write.
+                    var root = ModRoot;
+                    return string.IsNullOrEmpty(root) ? null : Path.Combine(root, "Logs");
+                }
+                return Path.Combine(Path.Combine(data, "RimDoctor"), "Logs");
+            }
+        }
     }
 }

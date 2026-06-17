@@ -16,6 +16,7 @@ Source/**/bin/
 
 # RimDoctor runtime artifacts (generated in the game's mod dir at runtime)
 Backups/
+Logs/
 
 # Local Claude Code settings
 .claude/
