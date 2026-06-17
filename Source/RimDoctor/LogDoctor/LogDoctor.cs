@@ -15,13 +15,20 @@ namespace RimDoctor
     public static class LogDoctor
     {
         private const int MaxEntries = 500;
+        private const int MaxBenign = 400;
         private static readonly object gate = new object();
         private static readonly Dictionary<string, LogEntry> byKey = new Dictionary<string, LogEntry>();
-        private static readonly List<LogEntry> ordered = new List<LogEntry>(); // newest last
+        private static readonly List<LogEntry> ordered = new List<LogEntry>(); // newest last — ACTIONABLE only
+        // Benign noise is quarantined here so it never buries or evicts real issues.
+        private static readonly Dictionary<string, LogEntry> benignByKey = new Dictionary<string, LogEntry>();
+        private static readonly List<LogEntry> benignOrdered = new List<LogEntry>();
         private static int frameCounter;
         private static int version;
 
+        /// <summary>Count of ACTIONABLE issues (benign noise excluded).</summary>
         public static int IssueCount { get { lock (gate) return ordered.Count; } }
+        /// <summary>Count of distinct benign (auto-classified) messages quarantined.</summary>
+        public static int BenignCount { get { lock (gate) return benignOrdered.Count; } }
 
         /// <summary>
         /// Bumped whenever the captured set changes. UI panels compare this against
@@ -30,12 +37,23 @@ namespace RimDoctor
         /// </summary>
         public static int Version { get { lock (gate) return version; } }
 
-        /// <summary>Snapshot of entries, newest first.</summary>
+        /// <summary>Snapshot of ACTIONABLE entries, newest first.</summary>
         public static List<LogEntry> Snapshot()
         {
             lock (gate)
             {
                 var copy = new List<LogEntry>(ordered);
+                copy.Reverse();
+                return copy;
+            }
+        }
+
+        /// <summary>Snapshot of quarantined BENIGN entries, newest first.</summary>
+        public static List<LogEntry> SnapshotBenign()
+        {
+            lock (gate)
+            {
+                var copy = new List<LogEntry>(benignOrdered);
                 copy.Reverse();
                 return copy;
             }
@@ -47,6 +65,8 @@ namespace RimDoctor
             {
                 byKey.Clear();
                 ordered.Clear();
+                benignByKey.Clear();
+                benignOrdered.Clear();
                 version++;
             }
         }
@@ -54,21 +74,23 @@ namespace RimDoctor
         /// <summary>
         /// Capture a log message. Safe to call from any thread (the Unity hook is
         /// threaded). Does no Unity work — just text + regex + attribution.
+        /// Returns true if the message matched a BENIGN rule (so the caller may
+        /// suppress it from the game's dev log).
         /// </summary>
-        public static void Capture(LogSeverity severity, string text, string stackTrace = null)
+        public static bool Capture(LogSeverity severity, string text, string stackTrace = null)
         {
             try
             {
                 if (string.IsNullOrEmpty(text))
-                    return;
+                    return false;
 
                 // Never capture our own messages — avoids recursion + noise.
                 if (text.IndexOf(RDLog.Prefix, StringComparison.Ordinal) >= 0)
-                    return;
+                    return false;
 
                 var settings = RimDoctorMod.Instance?.Settings;
                 if (settings != null && !settings.logDoctorEnabled)
-                    return;
+                    return false;
 
                 string full = string.IsNullOrEmpty(stackTrace) ? text : text + "\n" + stackTrace;
                 string firstLine = FirstLine(text);
@@ -76,11 +98,18 @@ namespace RimDoctor
 
                 lock (gate)
                 {
-                    if (byKey.TryGetValue(key, out var existing))
+                    // Already seen (either bucket)? bump occurrences, report benign-ness.
+                    if (byKey.TryGetValue(key, out var existingA))
                     {
-                        existing.occurrences++;
-                        version++; // (xN) count changed
-                        return;
+                        existingA.occurrences++;
+                        version++;
+                        return false;
+                    }
+                    if (benignByKey.TryGetValue(key, out var existingB))
+                    {
+                        existingB.occurrences++;
+                        version++;
+                        return true;
                     }
 
                     var entry = new LogEntry
@@ -98,10 +127,29 @@ namespace RimDoctor
                         var m = rule.TryMatch(full);
                         if (m == null) continue;
                         entry.advice = rule;
-                        entry.culpritMod = Attribute(rule, m, full);
+                        entry.isBenign = rule.benign;
+                        if (!rule.benign)
+                            entry.culpritMod = Attribute(rule, m, full);
                         break;
                     }
-                    // If no rule attributed it, still try a text-based guess.
+
+                    if (entry.isBenign)
+                    {
+                        // Quarantine: never touches the actionable list/cap, and we
+                        // do NOT spam the persistent session log with it.
+                        benignByKey[key] = entry;
+                        benignOrdered.Add(entry);
+                        if (benignOrdered.Count > MaxBenign)
+                        {
+                            var rm = benignOrdered[0];
+                            benignOrdered.RemoveAt(0);
+                            benignByKey.Remove(rm.DedupKey);
+                        }
+                        version++;
+                        return true;
+                    }
+
+                    // Actionable: attribute if not already, store, mirror to session log.
                     if (entry.culpritMod == null)
                         entry.culpritMod = ModAttribution.GuessOwnerFromText(full);
 
@@ -109,9 +157,6 @@ namespace RimDoctor
                     ordered.Add(entry);
                     version++;
 
-                    // Mirror each NEW unique game-log issue into RimDoctor's persistent
-                    // session log so the on-disk log captures game errors too (not just
-                    // RimDoctor's own events). Deduped, so this stays low-volume.
                     DiagLevel dl = severity == LogSeverity.Error ? DiagLevel.Error
                                  : severity == LogSeverity.Warning ? DiagLevel.Warn
                                  : DiagLevel.Info;
@@ -124,12 +169,14 @@ namespace RimDoctor
                         ordered.RemoveAt(0);
                         byKey.Remove(removed.DedupKey);
                     }
+                    return false;
                 }
             }
             catch (Exception e)
             {
                 // Use the underlying logger directly; never recurse through Capture.
                 RDLog.Exception("LogDoctor.Capture failed", e);
+                return false;
             }
         }
 
@@ -174,8 +221,9 @@ namespace RimDoctor
             var sb = new StringBuilder();
             sb.AppendLine("=== RimDoctor Log Doctor report ===");
             var snap = Snapshot();
-            sb.AppendLine($"{snap.Count} unique issue(s) captured. Texture substitutions this session: "
-                + $"{TextureSubstitutionLog.UniquePathCount} path(s), {TextureSubstitutionLog.DrawTimeCatchCount} draw-time catch(es).");
+            sb.AppendLine($"{snap.Count} issue(s) to address. {BenignCount} benign message(s) auto-classified and hidden. "
+                + $"Texture substitutions this session: {TextureSubstitutionLog.UniquePathCount} path(s), "
+                + $"{TextureSubstitutionLog.DrawTimeCatchCount} draw-time catch(es).");
             sb.AppendLine();
             int n = 1;
             foreach (var e in snap)

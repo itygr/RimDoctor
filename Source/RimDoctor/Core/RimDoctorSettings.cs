@@ -31,6 +31,9 @@ namespace RimDoctor
 
         // ---- Milestone 4: Log Doctor ----
         public bool logDoctorEnabled = true;
+        // Quarantine + skip known-benign vanilla log spam (song/audio probes, etc.)
+        // from the game's dev log so the real, actionable errors stand out.
+        public bool suppressBenignLogSpam = true;
 
         // ---- Milestone 5: repair tier ----
         public RepairTier repairTier = RepairTier.ReportOnly;
@@ -46,6 +49,7 @@ namespace RimDoctor
             Scribe_Values.Look(ref aggressiveLoadFallback, "aggressiveLoadFallback", false);
             Scribe_Values.Look(ref logEachSubstitution, "logEachSubstitution", true);
             Scribe_Values.Look(ref logDoctorEnabled, "logDoctorEnabled", true);
+            Scribe_Values.Look(ref suppressBenignLogSpam, "suppressBenignLogSpam", true);
             Scribe_Values.Look(ref repairTier, "repairTier", RepairTier.ReportOnly);
             Scribe_Values.Look(ref backupRetention, "backupRetention", 10);
             Scribe_Values.Look(ref communityRulesUrl, "communityRulesUrl",

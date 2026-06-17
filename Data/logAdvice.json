@@ -9,7 +9,8 @@
       "meaning": "RimWorld probed for an optional texture next to a song/audio asset and didn't find one.",
       "likelyCause": "Benign engine noise — songs have no textures. Happens every vanilla startup.",
       "suggestedFix": "Ignore. Not a problem and not caused by any mod.",
-      "attributionHint": "none"
+      "attributionHint": "none",
+      "benign": true
     },
     {
       "id": "audio-clip-missing",
@@ -18,7 +19,8 @@
       "meaning": "RimWorld's sound system couldn't find an optional audio clip variant.",
       "likelyCause": "Usually benign engine noise for optional/variant sound grains. Only a real problem if you actually hear missing sounds.",
       "suggestedFix": "Ignore unless sounds are audibly missing in-game — then Steam → RimWorld → Properties → Installed Files → Verify Integrity of Game Files.",
-      "attributionHint": "none"
+      "attributionHint": "none",
+      "benign": true
     },
     {
       "id": "no-resolved-grains",
@@ -27,7 +29,8 @@
       "meaning": "A sound has no playable grains (a consequence of the missing audio clips above).",
       "likelyCause": "Follows from optional/missing sound clips; benign in most cases.",
       "suggestedFix": "Ignore unless sounds are audibly missing — then Verify Integrity of Game Files.",
-      "attributionHint": "none"
+      "attributionHint": "none",
+      "benign": true
     },
     {
       "id": "missing-texture",
@@ -72,7 +75,8 @@
       "meaning": "A buildable thing has no valid 'stuff' material to be made from.",
       "likelyCause": "A mod def bug — the thing is marked stuffable but no material category matches.",
       "suggestedFix": "Usually harmless logspam. If it floods the log, report it to the owning mod. Not a crash on its own.",
-      "attributionHint": "none"
+      "attributionHint": "none",
+      "benign": true
     },
     {
       "id": "ce-recipe-probe",
@@ -81,7 +85,8 @@
       "meaning": "Combat Extended is probing for ammo recipes that don't exist for some weapons.",
       "likelyCause": "Benign CE ammo-injection check.",
       "suggestedFix": "Ignore — this is expected CE behavior, not an error.",
-      "attributionHint": "none"
+      "attributionHint": "none",
+      "benign": true
     },
     {
       "id": "missing-def-xref",

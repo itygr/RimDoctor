@@ -13,6 +13,7 @@ namespace RimDoctor
 
         public LogAdviceRule advice;     // null if no rule matched
         public string culpritMod;        // best-effort attribution, may be null
+        public bool isBenign;            // matched a benign rule -> quarantined from the main list
 
         public string DedupKey;          // signature used to collapse repeats
 

@@ -5,34 +5,59 @@ using Verse;
 namespace RimDoctor
 {
     /// <summary>
-    /// Captures Verse.Log.Error / Warning / Message for the Log Doctor.
+    /// Captures Verse.Log.Error / Warning / Message for the Log Doctor, and — when
+    /// 'suppressBenignLogSpam' is on — skips the original log call for messages that
+    /// match a BENIGN advice rule, keeping the game's dev log clean.
     ///
     /// Targets (confirmed against 1.6.4850):
-    ///   Verse.Log.Error(string)
-    ///   Verse.Log.Warning(string)
-    ///   Verse.Log.Message(string)
+    ///   Verse.Log.Error(string) / Warning(string) / Message(string)
     ///
-    /// Postfix (not prefix) so we never interfere with the game's own logging —
-    /// the message still prints normally; we just observe it.
+    /// Prefix returns false ONLY to drop a known-benign message; on any error it
+    /// returns true so the game logs normally (RimDoctor never hides a real error).
     /// </summary>
+    internal static class LogCaptureCore
+    {
+        public static bool HandleReturnRunOriginal(LogSeverity severity, string text)
+        {
+            try
+            {
+                bool benign = LogDoctor.Capture(severity, text);
+                if (!benign)
+                    return true;
+
+                var s = RimDoctorMod.Instance?.Settings;
+                if (s != null && s.suppressBenignLogSpam)
+                    return false; // drop this benign message from the game's log
+            }
+            catch (Exception e)
+            {
+                RDLog.Exception("Log capture/suppress failed", e);
+            }
+            return true;
+        }
+    }
+
     [HarmonyPatch(typeof(Log), nameof(Log.Error), new[] { typeof(string) })]
     public static class Patch_Log_Error
     {
-        [HarmonyPostfix]
-        public static void Postfix(string text) => LogDoctor.Capture(LogSeverity.Error, text);
+        [HarmonyPrefix]
+        public static bool Prefix(string text) =>
+            LogCaptureCore.HandleReturnRunOriginal(LogSeverity.Error, text);
     }
 
     [HarmonyPatch(typeof(Log), nameof(Log.Warning), new[] { typeof(string) })]
     public static class Patch_Log_Warning
     {
-        [HarmonyPostfix]
-        public static void Postfix(string text) => LogDoctor.Capture(LogSeverity.Warning, text);
+        [HarmonyPrefix]
+        public static bool Prefix(string text) =>
+            LogCaptureCore.HandleReturnRunOriginal(LogSeverity.Warning, text);
     }
 
     [HarmonyPatch(typeof(Log), nameof(Log.Message), new[] { typeof(string) })]
     public static class Patch_Log_Message
     {
-        [HarmonyPostfix]
-        public static void Postfix(string text) => LogDoctor.Capture(LogSeverity.Message, text);
+        [HarmonyPrefix]
+        public static bool Prefix(string text) =>
+            LogCaptureCore.HandleReturnRunOriginal(LogSeverity.Message, text);
     }
 }

@@ -17,6 +17,7 @@ namespace RimDoctor
         private Vector2 scroll;
         private string filter = "";
         private bool onlyWithAdvice;
+        private bool showBenign;
 
         // Cached view — rebuilt only when the captured set, filter, flags, or width
         // change (not every frame). IMGUI repaints continuously, so copying +
@@ -26,6 +27,7 @@ namespace RimDoctor
         private int cacheVersion = -1;
         private string cacheFilter;
         private bool cacheOnlyAdvice;
+        private bool cacheShowBenign;
         private float cacheWidth = -1f;
 
         public void OnSelected() { }
@@ -34,16 +36,21 @@ namespace RimDoctor
         {
             int v = LogDoctor.Version;
             if (cachedEntries != null && v == cacheVersion && cacheOnlyAdvice == onlyWithAdvice
-                && cacheFilter == filter && Mathf.Approximately(cacheWidth, contentWidth))
+                && cacheShowBenign == showBenign && cacheFilter == filter
+                && Mathf.Approximately(cacheWidth, contentWidth))
                 return;
 
-            cachedEntries = Filtered(LogDoctor.Snapshot());
+            // Actionable issues always; benign noise only when explicitly shown.
+            var src = LogDoctor.Snapshot();
+            if (showBenign) src.AddRange(LogDoctor.SnapshotBenign());
+            cachedEntries = Filtered(src);
             cachedViewHeight = 0f;
             foreach (var e in cachedEntries) cachedViewHeight += RowHeight(e, contentWidth);
 
             cacheVersion = v;
             cacheFilter = filter;
             cacheOnlyAdvice = onlyWithAdvice;
+            cacheShowBenign = showBenign;
             cacheWidth = contentWidth;
         }
 
@@ -74,18 +81,22 @@ namespace RimDoctor
                 LogDoctor.Clear();
             }
             x += 110f;
-            Widgets.CheckboxLabeled(new Rect(x, bar.y, 180f, 28f),
+            Widgets.CheckboxLabeled(new Rect(x, bar.y, 150f, 28f),
                 "RimDoctor.LogDoctor.OnlyAdvice".TranslateSafe("Only explained"), ref onlyWithAdvice);
+            x += 156f;
+            Widgets.CheckboxLabeled(new Rect(x, bar.y, 200f, 28f),
+                "RimDoctor.LogDoctor.ShowBenign".TranslateSafe($"Show benign ({LogDoctor.BenignCount})"), ref showBenign);
 
             // Filter field
             var filterRect = new Rect(rect.xMax - 230f, bar.y, 230f, 28f);
             filter = Widgets.TextField(filterRect, filter ?? "");
 
-            // Summary line
+            // Summary line — actionable count is the "fix list"; benign is quarantined.
             var summary = new Rect(rect.x, bar.yMax + 4f, rect.width, 22f);
             Text.Font = GameFont.Tiny;
             Widgets.Label(summary, "RimDoctor.LogDoctor.Summary".TranslateSafe(
-                $"{LogDoctor.IssueCount} unique issue(s) • {LogAdviceDatabase.RuleCount} advice rule(s) • "
+                $"{LogDoctor.IssueCount} issue(s) to address • {LogDoctor.BenignCount} benign auto-hidden • "
+                + $"{LogAdviceDatabase.RuleCount} rules • "
                 + $"{TextureSubstitutionLog.UniquePathCount} texture(s) substituted, "
                 + $"{TextureSubstitutionLog.DrawTimeCatchCount} draw-time null(s) caught"));
             Text.Font = GameFont.Small;

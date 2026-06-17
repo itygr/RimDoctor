@@ -15,12 +15,13 @@ namespace RimDoctor
         public string likelyCause;
         public string suggestedFix;
         public string attributionHint; // "texturePath" | "modName" | "none"
+        public bool benign;            // known-harmless noise: quarantined + optionally suppressed
 
         private readonly Regex regex;
         public bool Valid => regex != null;
 
         public LogAdviceRule(string id, string pattern, string severity, string meaning,
-            string likelyCause, string suggestedFix, string attributionHint)
+            string likelyCause, string suggestedFix, string attributionHint, bool benign)
         {
             this.id = id;
             this.severity = severity;
@@ -28,6 +29,7 @@ namespace RimDoctor
             this.likelyCause = likelyCause;
             this.suggestedFix = suggestedFix;
             this.attributionHint = attributionHint;
+            this.benign = benign;
             try
             {
                 regex = new Regex(pattern,
@@ -64,6 +66,17 @@ namespace RimDoctor
         public static IReadOnlyList<LogAdviceRule> Rules => rules;
         public static int RuleCount => rules.Count;
 
+        /// <summary>First rule whose pattern matches the text, or null. First match wins.</summary>
+        public static LogAdviceRule Match(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return null;
+            var snapshot = rules; // local ref; LoadOrReload swaps the whole list atomically
+            for (int i = 0; i < snapshot.Count; i++)
+                if (snapshot[i].TryMatch(text) != null)
+                    return snapshot[i];
+            return null;
+        }
+
         public static void LoadOrReload()
         {
             try
@@ -86,14 +99,19 @@ namespace RimDoctor
                         if (o == null) continue;
                         string pattern = Json.Str(o, "pattern");
                         if (string.IsNullOrEmpty(pattern)) continue;
+                        string severity = Json.Str(o, "severity", "Warning");
+                        // benign defaults true for Message-severity rules unless overridden.
+                        bool benign = string.Equals(severity, "Message", System.StringComparison.OrdinalIgnoreCase);
+                        if (o.TryGetValue("benign", out var bv) && bv is bool bb) benign = bb;
                         var rule = new LogAdviceRule(
                             Json.Str(o, "id", "(unnamed)"),
                             pattern,
-                            Json.Str(o, "severity", "Warning"),
+                            severity,
                             Json.Str(o, "meaning", ""),
                             Json.Str(o, "likelyCause", ""),
                             Json.Str(o, "suggestedFix", ""),
-                            Json.Str(o, "attributionHint", "none"));
+                            Json.Str(o, "attributionHint", "none"),
+                            benign);
                         if (rule.Valid)
                             parsed.Add(rule);
                     }

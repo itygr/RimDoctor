@@ -122,6 +122,11 @@ namespace RimDoctor
                 l.CheckboxLabeled(
                     "RimDoctor.Settings.LogDoctor".TranslateSafe("Enable Log Doctor (explain errors in plain language)"),
                     ref settings.logDoctorEnabled);
+                l.CheckboxLabeled(
+                    "RimDoctor.Settings.SuppressBenign".TranslateSafe("Hide known-benign log spam (clean log)"),
+                    ref settings.suppressBenignLogSpam,
+                    "RimDoctor.Settings.SuppressBenign.Tip".TranslateSafe(
+                        "Quarantines vanilla noise (optional song/audio asset probes, CE ammo checks, etc.) so it never buries real errors, and skips it from the game's dev log. Only messages matching a rule explicitly marked 'benign' are affected — real errors are never hidden."));
 
                 l.Gap();
                 l.Label("RimDoctor.Settings.RepairTier".TranslateSafe("Repair tier"));
