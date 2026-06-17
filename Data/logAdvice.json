@@ -33,6 +33,24 @@
       "benign": true
     },
     {
+      "id": "audio-playback-no-grains",
+      "pattern": "Cannot play .+No resolved grains",
+      "severity": "Warning",
+      "meaning": "A sound tried to play but has no loaded audio to play.",
+      "likelyCause": "The sound's audio clips didn't load. With no mods active this usually means the game's audio files are incomplete or didn't download fully.",
+      "suggestedFix": "If you notice missing/silent sounds in-game: Steam → RimWorld → Properties → Installed Files → Verify Integrity of Game Files. If audio works fine, this is harmless.",
+      "attributionHint": "none"
+    },
+    {
+      "id": "keybinding-conflict",
+      "pattern": "Key binding conflict: (.+?) and (.+?) are both bound to (.+)",
+      "severity": "Warning",
+      "meaning": "Two actions share the same hotkey, so the key is ambiguous.",
+      "likelyCause": "Default or mod-added keybindings overlap.",
+      "suggestedFix": "Options → Keyboard configuration → rebind one of the two conflicting actions to a free key.",
+      "attributionHint": "none"
+    },
+    {
       "id": "missing-texture",
       "pattern": "Could not load (?:UnityEngine\\.)?Texture2D at '?(.+?)'? in any active mod",
       "severity": "Warning",

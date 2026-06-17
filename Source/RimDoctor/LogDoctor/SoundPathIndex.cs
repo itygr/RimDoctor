@@ -62,7 +62,14 @@ namespace RimDoctor
                         foreach (var grain in ss.grains)
                         {
                             if (grain is AudioGrain_Clip clip && !string.IsNullOrEmpty(clip.clipPath))
+                            {
                                 clipPaths.Add(clip.clipPath);
+                                // Also index the clip's folder so the engine's variant probes
+                                // (e.g. a "_Stereo"/"_Mono" sibling of the clip) are recognised.
+                                int slash = clip.clipPath.LastIndexOf('/');
+                                if (slash > 0)
+                                    folderPaths.Add(clip.clipPath.Substring(0, slash + 1));
+                            }
                             else if (grain is AudioGrain_Folder folder && !string.IsNullOrEmpty(folder.clipFolderPath))
                                 folderPaths.Add(folder.clipFolderPath.TrimEnd('/') + "/");
                         }
