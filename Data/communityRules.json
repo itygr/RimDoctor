@@ -1,0 +1,21 @@
+{
+  "_comment": "RimDoctor community sorting rules (snapshot). Schema: rules[packageId] = { loadAfter:[ids], loadBefore:[ids] }. packageIds are lowercase. These supplement each mod's own About.xml loadAfter/loadBefore. Hard About.xml dependencies always win; these win over RimDoctor's tier heuristic. Refresh a larger set from the URL in Mod Settings. Modeled on the RimSort/RimPy Community Rules DB.",
+  "version": 1,
+  "rules": {
+    "ludeon.rimworld": { "loadAfter": ["brrainz.harmony"], "loadBefore": [] },
+    "unlimitedhugs.hugslib": { "loadAfter": ["brrainz.harmony", "ludeon.rimworld"], "loadBefore": [] },
+    "oskarpotocki.vanillafactionsexpanded.core": { "loadAfter": ["ludeon.rimworld"], "loadBefore": [] },
+    "vanillaexpanded.vanillaframeworkexpanded": { "loadAfter": ["ludeon.rimworld"], "loadBefore": [] },
+    "vanillaexpanded.backgrounds": { "loadAfter": ["ludeon.rimworld"], "loadBefore": [] },
+    "automatic.bionicicons": { "loadAfter": ["ludeon.rimworld"], "loadBefore": [] },
+    "ceteam.combatextended": {
+      "loadAfter": ["ludeon.rimworld", "oskarpotocki.vanillafactionsexpanded.core"],
+      "loadBefore": ["erdelf.humanoidalienraces"]
+    },
+    "petetimessix.simplesidearms": { "loadAfter": ["ceteam.combatextended"], "loadBefore": [] },
+    "erdelf.humanoidalienraces": { "loadAfter": ["ludeon.rimworld", "brrainz.harmony"], "loadBefore": [] },
+    "void.charactereditor": { "loadAfter": [], "loadBefore": [] },
+    "edbprepare.carefully": { "loadAfter": [], "loadBefore": [] },
+    "fluffy.modmanager": { "loadAfter": ["brrainz.harmony"], "loadBefore": [] }
+  }
+}

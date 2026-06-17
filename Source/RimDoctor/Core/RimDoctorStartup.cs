@@ -20,6 +20,10 @@ namespace RimDoctor
             try { LogAdviceDatabase.LoadOrReload(); }
             catch (Exception e) { RDLog.Exception("Loading advice DB failed", e); }
 
+            // Load community sorting rules for the load-order sorter.
+            try { CommunityRules.LoadOrReload(); }
+            catch (Exception e) { RDLog.Exception("Loading community rules failed", e); }
+
             // Capture Unity-level messages that don't flow through Verse.Log
             // (e.g. "null texture passed to GUI.DrawTexture", native exceptions).
             // This callback can fire off the main thread — Capture() does no Unity work.
