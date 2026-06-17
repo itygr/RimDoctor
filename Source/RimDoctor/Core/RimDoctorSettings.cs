@@ -34,6 +34,9 @@ namespace RimDoctor
         // Quarantine + skip known-benign vanilla log spam (song/audio probes, etc.)
         // from the game's dev log so the real, actionable errors stand out.
         public bool suppressBenignLogSpam = true;
+        // Open RimDoctor's plain-language log window instead of RimWorld's raw one
+        // when the red error box is clicked / the log auto-opens.
+        public bool useRimDoctorLogWindow = true;
 
         // ---- Milestone 5: repair tier ----
         public RepairTier repairTier = RepairTier.ReportOnly;
@@ -50,6 +53,7 @@ namespace RimDoctor
             Scribe_Values.Look(ref logEachSubstitution, "logEachSubstitution", true);
             Scribe_Values.Look(ref logDoctorEnabled, "logDoctorEnabled", true);
             Scribe_Values.Look(ref suppressBenignLogSpam, "suppressBenignLogSpam", true);
+            Scribe_Values.Look(ref useRimDoctorLogWindow, "useRimDoctorLogWindow", true);
             Scribe_Values.Look(ref repairTier, "repairTier", RepairTier.ReportOnly);
             Scribe_Values.Look(ref backupRetention, "backupRetention", 10);
             Scribe_Values.Look(ref communityRulesUrl, "communityRulesUrl",

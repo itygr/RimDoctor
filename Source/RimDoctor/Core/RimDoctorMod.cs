@@ -127,6 +127,11 @@ namespace RimDoctor
                     ref settings.suppressBenignLogSpam,
                     "RimDoctor.Settings.SuppressBenign.Tip".TranslateSafe(
                         "Quarantines vanilla noise (optional song/audio asset probes, CE ammo checks, etc.) so it never buries real errors, and skips it from the game's dev log. Only messages matching a rule explicitly marked 'benign' are affected — real errors are never hidden."));
+                l.CheckboxLabeled(
+                    "RimDoctor.Settings.UseLogWindow".TranslateSafe("Use RimDoctor's plain-language log window"),
+                    ref settings.useRimDoctorLogWindow,
+                    "RimDoctor.Settings.UseLogWindow.Tip".TranslateSafe(
+                        "When you click the red error box (or the log auto-opens), show RimDoctor's clean, plain-language log — what each error means, the likely culprit mod, and the fix — instead of RimWorld's raw message list. Turn off to use the vanilla log."));
 
                 l.Gap();
                 l.Label("RimDoctor.Settings.RepairTier".TranslateSafe("Repair tier"));

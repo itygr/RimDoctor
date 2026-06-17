@@ -120,8 +120,18 @@ namespace RimDoctor
             }
             if (entries.Count == 0)
             {
-                Widgets.Label(new Rect(0, 0, view.width, 40f),
-                    "RimDoctor.LogDoctor.None".TranslateSafe("No issues captured yet. Errors and warnings will appear here as they occur."));
+                string msg;
+                if (LogDoctor.IssueCount == 0 && LogDoctor.BenignCount > 0 && !showBenign && string.IsNullOrEmpty(filter))
+                    msg = "RimDoctor.LogDoctor.AllBenign".TranslateSafe(
+                        $"✅ Nothing needs your attention.\n\n{LogDoctor.BenignCount} harmless engine/mod messages were auto-classified and hidden. "
+                        + "Tick 'Show benign' above if you want to see them.");
+                else if (LogDoctor.IssueCount == 0 && string.IsNullOrEmpty(filter))
+                    msg = "RimDoctor.LogDoctor.Clean".TranslateSafe(
+                        "✅ No problems logged. Real errors and warnings will appear here in plain language as they happen.");
+                else
+                    msg = "RimDoctor.LogDoctor.NoneMatch".TranslateSafe("Nothing matches the current filter.");
+                Text.Font = GameFont.Small;
+                Widgets.Label(new Rect(4f, 4f, view.width - 8f, 80f), msg);
             }
             Widgets.EndScrollView();
         }
