@@ -1,0 +1,85 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using Verse;
+
+namespace RimDoctor
+{
+    /// <summary>
+    /// Best-effort attribution: given a (missing) texture path, guess which mod it
+    /// belongs to. A missing texture is by definition in no mod's loaded content,
+    /// so we can't look it up directly. Instead we find the mod that owns the
+    /// DIRECTORY the texture should live in — i.e. the mod that has other loaded
+    /// textures under the same folder. That's almost always the real owner.
+    ///
+    /// Expanded in Milestone 4 to also attribute from stack-trace assembly names.
+    /// </summary>
+    public static class ModAttribution
+    {
+        /// <summary>
+        /// Returns the display name of the mod most likely to own <paramref name="texturePath"/>,
+        /// or null if no confident guess. Never throws.
+        /// </summary>
+        public static string GuessOwnerForTexturePath(string texturePath)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(texturePath))
+                    return null;
+
+                var mods = LoadedModManager.RunningModsListForReading;
+                if (mods == null)
+                    return null;
+
+                // Walk up the directory chain: "A/B/C/tex" -> "A/B/C" -> "A/B" -> "A".
+                // The deepest folder with a loaded sibling texture wins.
+                string dir = DirectoryOf(texturePath);
+                while (!string.IsNullOrEmpty(dir))
+                {
+                    foreach (var mod in mods)
+                    {
+                        if (mod == null)
+                            continue;
+                        if (ModHasTextureUnder(mod, dir))
+                            return mod.Name;
+                    }
+                    dir = ParentOf(dir);
+                }
+            }
+            catch (Exception e)
+            {
+                RDLog.Exception("GuessOwnerForTexturePath failed", e);
+            }
+            return null;
+        }
+
+        private static bool ModHasTextureUnder(ModContentPack mod, string dir)
+        {
+            try
+            {
+                var holder = mod.GetContentHolder<Texture2D>();
+                if (holder == null)
+                    return false;
+                IEnumerable<Texture2D> under = holder.GetAllUnderPath(dir);
+                return under != null && under.Any();
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static string DirectoryOf(string path)
+        {
+            int i = path.LastIndexOf('/');
+            return i <= 0 ? "" : path.Substring(0, i);
+        }
+
+        private static string ParentOf(string dir)
+        {
+            int i = dir.LastIndexOf('/');
+            return i <= 0 ? "" : dir.Substring(0, i);
+        }
+    }
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>RimDoctor TEST — Broken Content</name>
+  <author>tyler</author>
+  <packageId>tyler.rimdoctor.testbroken</packageId>
+  <description>Deliberately broken test mod for verifying RimDoctor.
+
+Contains a ThingDef whose texture path points at a texture that does not exist. With RimDoctor's texture fallback ON, loading/spawning this item shows a magenta placeholder instead of returning null (which would freeze/crash). With fallback OFF you get the vanilla null-texture failure.
+
+DO NOT ship this. It lives under Dev/ for testing only.</description>
+  <supportedVersions>
+    <li>1.6</li>
+  </supportedVersions>
+  <modDependencies>
+    <li>
+      <packageId>brrainz.harmony</packageId>
+      <displayName>Harmony</displayName>
+    </li>
+  </modDependencies>
+  <loadAfter>
+    <li>tyler.rimdoctor</li>
+  </loadAfter>
+</ModMetaData>

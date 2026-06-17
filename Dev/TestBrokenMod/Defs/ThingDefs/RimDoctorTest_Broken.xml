@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!--
+    A simple resource item whose texture path is intentionally missing.
+    Path "Things/Item/RimDoctorTest/DefinitelyMissing" exists in no mod, so
+    ContentFinder<Texture2D>.Get returns null at load/spawn time. RimDoctor's
+    fallback turns that null into the magenta placeholder.
+  -->
+  <ThingDef ParentName="ResourceBase">
+    <defName>RimDoctorTest_BrokenItem</defName>
+    <label>RimDoctor test (broken texture)</label>
+    <description>A test item with a deliberately missing texture. If you see a magenta/black checkerboard, RimDoctor's texture fallback is working. If the game froze or threw a null-texture error instead, fallback is off or failed.</description>
+    <thingClass>ThingWithComps</thingClass>
+    <graphicData>
+      <texPath>Things/Item/RimDoctorTest/DefinitelyMissing</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+    </graphicData>
+    <stackLimit>75</stackLimit>
+    <statBases>
+      <MarketValue>1</MarketValue>
+      <Mass>0.1</Mass>
+    </statBases>
+    <thingCategories>
+      <li>ResourcesRaw</li>
+    </thingCategories>
+  </ThingDef>
+</Defs>
