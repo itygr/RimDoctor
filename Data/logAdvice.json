@@ -3,12 +3,39 @@
   "version": 1,
   "rules": [
     {
+      "id": "song-texture-probe",
+      "pattern": "Could not load (?:UnityEngine\\.)?Texture2D at '?Songs/",
+      "severity": "Message",
+      "meaning": "RimWorld probed for an optional texture next to a song/audio asset and didn't find one.",
+      "likelyCause": "Benign engine noise — songs have no textures. Happens every vanilla startup.",
+      "suggestedFix": "Ignore. Not a problem and not caused by any mod.",
+      "attributionHint": "none"
+    },
+    {
+      "id": "audio-clip-missing",
+      "pattern": "Grain couldn't resolve: Clip not found at (.+)",
+      "severity": "Message",
+      "meaning": "RimWorld's sound system couldn't find an optional audio clip variant.",
+      "likelyCause": "Usually benign engine noise for optional/variant sound grains. Only a real problem if you actually hear missing sounds.",
+      "suggestedFix": "Ignore unless sounds are audibly missing in-game — then Steam → RimWorld → Properties → Installed Files → Verify Integrity of Game Files.",
+      "attributionHint": "none"
+    },
+    {
+      "id": "no-resolved-grains",
+      "pattern": "SubSound (.+?) has no resolvedGrains",
+      "severity": "Message",
+      "meaning": "A sound has no playable grains (a consequence of the missing audio clips above).",
+      "likelyCause": "Follows from optional/missing sound clips; benign in most cases.",
+      "suggestedFix": "Ignore unless sounds are audibly missing — then Verify Integrity of Game Files.",
+      "attributionHint": "none"
+    },
+    {
       "id": "missing-texture",
       "pattern": "Could not load (?:UnityEngine\\.)?Texture2D at '?(.+?)'? in any active mod",
       "severity": "Warning",
-      "meaning": "A texture file a mod asked for does not exist on disk.",
-      "likelyCause": "The mod's texture is missing or was not fully downloaded by Steam.",
-      "suggestedFix": "Re-subscribe / verify the owning mod's files. RimDoctor's texture fallback already prevents this from crashing — a magenta placeholder is shown instead.",
+      "meaning": "A requested texture does not exist on disk.",
+      "likelyCause": "If it belongs to a mod: the texture is missing or not fully downloaded. If it's base-game content with no mods active: an optional/variant probe (often benign), or — if you SEE missing textures — a corrupt game install.",
+      "suggestedFix": "Mod texture: re-subscribe / verify the mod. Base-game with visible breakage: Steam → Verify Integrity of Game Files. RimDoctor's draw-layer fallback prevents the per-frame freeze regardless.",
       "attributionHint": "texturePath"
     },
     {
