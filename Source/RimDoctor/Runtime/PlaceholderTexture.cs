@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Verse;
 
 namespace RimDoctor
 {
@@ -14,6 +15,7 @@ namespace RimDoctor
     /// safe. If creation ever fails we return null and let the original (null)
     /// behaviour stand — never throw.
     /// </summary>
+    [StaticConstructorOnStartup] // creates the cached Texture2D on the main thread, post-load
     public static class PlaceholderTexture
     {
         private static Texture2D cached;
@@ -21,16 +23,32 @@ namespace RimDoctor
         public const int Size = 64;      // texture dimensions
         private const int Tile = 8;      // checkerboard tile size in px
 
+        static PlaceholderTexture()
+        {
+            // Eagerly build on the main thread during startup so later draw-time
+            // calls just return the cache (and to satisfy RimWorld's rule that
+            // Texture2D assets are created on the main thread).
+            try { Build(); } catch (Exception e) { RDLog.Exception("Placeholder static init failed", e); }
+        }
+
         /// <summary>
-        /// The shared placeholder texture, created on first use. May return null
-        /// if Unity isn't in a state where a texture can be created — callers must
-        /// null-check and fall back gracefully.
+        /// The shared placeholder texture. Returns the cached one if built, else
+        /// builds it — but ONLY on the main thread (never off-thread, where
+        /// Texture2D creation is illegal). May return null; callers must null-check.
         /// </summary>
         public static Texture2D Get()
         {
             if (cached != null)
                 return cached;
+            if (!UnityData.IsInMainThread)
+                return null; // cannot safely create a texture off the main thread
+            return Build();
+        }
 
+        private static Texture2D Build()
+        {
+            if (cached != null)
+                return cached;
             try
             {
                 var tex = new Texture2D(Size, Size, TextureFormat.RGBA32, mipChain: false)

@@ -11,13 +11,22 @@ namespace RimDoctor
     /// Target: Verse.ContentFinder&lt;UnityEngine.Texture2D&gt;.Get(string itemPath, bool reportFailure)
     ///         (static, returns Texture2D — confirmed against RimWorld 1.6.4850)
     ///
-    /// Behaviour: if the load returns null AND the caller wanted a failure reported
-    /// (reportFailure == true), we substitute a generated placeholder instead of
-    /// null. Returning null here is what crashes/freezes screens in big modlists.
+    /// WARNING — OFF BY DEFAULT. This was the original "headline" approach but it is
+    /// fundamentally unsound: reportFailure == true does NOT mean "this texture must
+    /// exist". RimWorld (and many mods) call Get(path, true) for things that are
+    /// legitimately absent (song art, ambience, optional effects) and handle the
+    /// null. Substituting a placeholder breaks that null-handling and crashes on
+    /// load (observed: 477 expected-null probes turned into placeholders → crash).
+    /// It also risks creating a Texture2D off the main thread during async loading.
     ///
-    /// We deliberately do NOT substitute when reportFailure == false: that path is
-    /// how callers (and RimDoctor's own M2 scanner) probe whether a texture exists.
-    /// Substituting there would make every texture look present.
+    /// The SAFE anti-freeze protection lives at the draw layer (Patch_GUI_DrawTexture),
+    /// which only substitutes a texture that is actually about to be rendered and
+    /// always runs on the main thread. This patch is therefore gated behind the
+    /// explicit, off-by-default 'aggressiveLoadFallback' setting and is a no-op
+    /// unless the user knowingly enables it.
+    ///
+    /// reportFailure == false is always left untouched — that's how the M2 scanner
+    /// probes for existence.
     /// </summary>
     [HarmonyPatch]
     public static class Patch_ContentFinder_Texture
@@ -44,8 +53,14 @@ namespace RimDoctor
                 if (!reportFailure)
                     return;
 
+                // OFF by default. Without the explicit opt-in this is a complete
+                // no-op — the safe draw-layer fallback handles the real freeze case.
                 var settings = RimDoctorMod.Instance?.Settings;
-                if (settings == null || !settings.textureFallbackEnabled)
+                if (settings == null || !settings.aggressiveLoadFallback)
+                    return;
+
+                // Never create a Texture2D off the main thread (async asset loading).
+                if (!UnityData.IsInMainThread)
                     return;
 
                 var placeholder = PlaceholderTexture.Get();

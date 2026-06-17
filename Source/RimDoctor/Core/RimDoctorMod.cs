@@ -98,13 +98,25 @@ namespace RimDoctor
                 l.Label("RimDoctor.Settings.Header".TranslateSafe("Runtime protection"));
                 l.GapLine();
                 l.CheckboxLabeled(
-                    "RimDoctor.Settings.TextureFallback".TranslateSafe("Prevent missing-texture crashes (texture fallback)"),
+                    "RimDoctor.Settings.TextureFallback".TranslateSafe("Prevent missing-texture freezes (draw-layer fallback)"),
                     ref settings.textureFallbackEnabled,
                     "RimDoctor.Settings.TextureFallback.Tip".TranslateSafe(
-                        "Substitutes a generated placeholder for any texture that fails to load, instead of returning null (which freezes/crashes screens). HEADLINE feature — recommended ON."));
+                        "When a null texture is about to be DRAWN, substitute a placeholder instead. Stops the per-frame 'null texture passed to GUI.DrawTexture' freeze. Safe — runs only at draw time on the main thread. Recommended ON."));
                 l.CheckboxLabeled(
                     "RimDoctor.Settings.LogSub".TranslateSafe("Log each substituted texture once"),
                     ref settings.logEachSubstitution);
+
+                l.Gap(6f);
+                bool prevAggressive = settings.aggressiveLoadFallback;
+                l.CheckboxLabeled(
+                    "RimDoctor.Settings.LoadFallback".TranslateSafe("⚠ Aggressive load-time fallback (DANGEROUS — can crash on load)"),
+                    ref settings.aggressiveLoadFallback,
+                    "RimDoctor.Settings.LoadFallback.Tip".TranslateSafe(
+                        "Also substitute placeholders when textures are LOADED (ContentFinder.Get). RimWorld and many mods request textures that are meant to be absent and handle the null; substituting here breaks that and has been observed to crash the game on load. Leave OFF unless you know exactly why you need it."));
+                if (settings.aggressiveLoadFallback && !prevAggressive)
+                    Messages.Message("RimDoctor.Settings.LoadFallback.Warn".TranslateSafe(
+                        "Aggressive load-time fallback can crash the game on load. Enable at your own risk."),
+                        MessageTypeDefOf.CautionInput, false);
 
                 l.Gap();
                 l.CheckboxLabeled(
