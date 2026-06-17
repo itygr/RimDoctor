@@ -124,6 +124,11 @@ namespace RimDoctor
             }
             x += 156f;
 
+            if (Widgets.ButtonText(new Rect(x, rbar.y, 170f, 26f),
+                    "RimDoctor.Health.ResetSettings".TranslateSafe("Reset a mod's settings…")))
+                Find.WindowStack.Add(new Dialog_ResetModSettings());
+            x += 176f;
+
             if (!string.IsNullOrEmpty(lastRepairNote))
             {
                 Text.Font = GameFont.Tiny;

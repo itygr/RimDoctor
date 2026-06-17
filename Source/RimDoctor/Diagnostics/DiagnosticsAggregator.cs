@@ -137,6 +137,19 @@ namespace RimDoctor
                             : "Update the mod (Workshop), find a 1.6 fork/continued version, or disable it."
                     });
 
+                // --- C# mods whose assembly failed to load (silently inert) ---
+                foreach (var d in DisabledModScanner.Scan())
+                    items.Add(new ActionItem
+                    {
+                        severity = ActionSeverity.High,
+                        source = "Disabled",
+                        title = $"Assembly failed to load: {d.modName}",
+                        detail = "This mod ships code for the current version but RimWorld loaded none of it — "
+                               + "its features silently don't work. Usually a startup exception or a hard incompatibility.",
+                        culpritMod = d.modName,
+                        suggestion = "Check the Log Doctor for an error mentioning this mod; update it, fix its load order/deps, or disable it."
+                    });
+
                 // --- Harmony conflicts ---
                 if (harmony != null)
                 {
