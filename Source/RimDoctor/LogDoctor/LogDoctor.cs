@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Verse;
 
 namespace RimDoctor
 {
@@ -106,6 +107,47 @@ namespace RimDoctor
             catch (Exception ex)
             {
                 RDLog.Exception("ReclassifySoundProbes failed", ex);
+            }
+        }
+
+        /// <summary>
+        /// Main-thread pass that fills in the culprit mod for any actionable entry
+        /// that couldn't be attributed at capture time (the live hook runs off the
+        /// main thread, and most texture errors are logged lazily — after the
+        /// post-load reclassify). Safe to call repeatedly; cheap when nothing is
+        /// missing a culprit. MUST be called from the main thread (UI/report).
+        /// </summary>
+        public static void EnsureAttributed()
+        {
+            try
+            {
+                if (!UnityData.IsInMainThread) return;
+                lock (gate)
+                {
+                    foreach (var e in ordered)
+                    {
+                        if (!string.IsNullOrEmpty(e.culpritMod) || e.advice == null) continue;
+                        if (e.advice.attributionHint == "texturePath")
+                        {
+                            string owner = ModAttribution.OwnerFromMessageDef(e.fullText);
+                            if (owner == null)
+                            {
+                                var m = e.advice.TryMatch(e.fullText);
+                                if (m != null && m.Groups.Count > 1)
+                                    owner = ModAttribution.GuessOwnerForTexturePath(m.Groups[1].Value.Trim().Trim('\''));
+                            }
+                            e.culpritMod = owner ?? ModAttribution.GuessOwnerFromText(e.fullText);
+                        }
+                        else
+                        {
+                            e.culpritMod = ModAttribution.GuessOwnerFromText(e.fullText);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                RDLog.Exception("EnsureAttributed failed", ex);
             }
         }
 
@@ -287,6 +329,7 @@ namespace RimDoctor
         /// <summary>Builds a shareable plain-text report of all captured issues.</summary>
         public static string BuildReport()
         {
+            EnsureAttributed(); // fill in culprits now that we're on the main thread
             var sb = new StringBuilder();
             sb.AppendLine("=== RimDoctor Log Doctor report ===");
             var snap = Snapshot();
@@ -294,6 +337,34 @@ namespace RimDoctor
                 + $"Texture substitutions this session: {TextureSubstitutionLog.UniquePathCount} path(s), "
                 + $"{TextureSubstitutionLog.DrawTimeCatchCount} draw-time catch(es).");
             sb.AppendLine();
+
+            // --- By-mod rollup: turn a wall of lines into an actionable shortlist. ---
+            // Group actionable issues by culprit. A mod with many missing-texture
+            // errors almost certainly failed to download its Textures folder.
+            var byMod = new Dictionary<string, int>();
+            var missingTexByMod = new Dictionary<string, int>();
+            foreach (var e in snap)
+            {
+                string mod = string.IsNullOrEmpty(e.culpritMod) ? "(unattributed)" : e.culpritMod;
+                byMod[mod] = byMod.TryGetValue(mod, out var c) ? c + e.occurrences : e.occurrences;
+                if (e.advice != null && e.advice.attributionHint == "texturePath")
+                    missingTexByMod[mod] = missingTexByMod.TryGetValue(mod, out var t) ? t + 1 : 1;
+            }
+            if (byMod.Count > 0)
+            {
+                sb.AppendLine("--- Summary by mod (fix these, not the 2000 lines below) ---");
+                foreach (var kv in byMod.OrderByDescending(k => k.Value))
+                {
+                    bool wholeSet = missingTexByMod.TryGetValue(kv.Key, out var mt) && mt >= 15;
+                    string flag = wholeSet
+                        ? "  ← many missing textures: this mod's Textures folder likely didn't download. Unsubscribe + resubscribe (or re-download)."
+                        : "";
+                    sb.AppendLine($"  {kv.Value,6}  {kv.Key}{flag}");
+                }
+                sb.AppendLine();
+            }
+
+            sb.AppendLine("--- Full detail ---");
             int n = 1;
             foreach (var e in snap)
             {

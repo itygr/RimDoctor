@@ -40,6 +40,8 @@ namespace RimDoctor
                 && Mathf.Approximately(cacheWidth, contentWidth))
                 return;
 
+            // Fill in culprit mods on the main thread before snapshotting.
+            LogDoctor.EnsureAttributed();
             // Actionable issues always; benign noise only when explicitly shown.
             var src = LogDoctor.Snapshot();
             if (showBenign) src.AddRange(LogDoctor.SnapshotBenign());
