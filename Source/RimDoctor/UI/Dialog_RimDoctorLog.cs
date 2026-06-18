@@ -32,16 +32,18 @@ namespace RimDoctor
 
         public override Vector2 InitialSize => new Vector2(980f, 680f);
 
-        /// <summary>Open (or focus) the window. Safe to call repeatedly.</summary>
+        /// <summary>
+        /// Ensure the window is open. Idempotent — calling it while already open is a
+        /// no-op (NOT a toggle). During worldgen the error path can fire the redirect
+        /// many times a second; toggling here made the window strobe, so we just keep
+        /// it open. Use the title-bar X to close.
+        /// </summary>
         public static void OpenOrFocus()
         {
             try
             {
-                if (Instance != null && Find.WindowStack.IsOpen(typeof(Dialog_RimDoctorLog)))
-                {
-                    Find.WindowStack.TryRemove(typeof(Dialog_RimDoctorLog), false);
-                    return; // toggle behaviour: open box again closes it
-                }
+                if (Find.WindowStack != null && Find.WindowStack.IsOpen(typeof(Dialog_RimDoctorLog)))
+                    return; // already open — do nothing (no strobe)
                 Instance = new Dialog_RimDoctorLog();
                 Find.WindowStack.Add(Instance);
             }

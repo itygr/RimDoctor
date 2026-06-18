@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using LudeonTK;
 using UnityEngine;
 using Verse;
 using RimWorld;
@@ -18,6 +19,10 @@ namespace RimDoctor
         private string filter = "";
         private bool onlyWithAdvice;
         private bool showBenign;
+        // Severity filters — all on by default.
+        private bool showErrors = true;
+        private bool showWarnings = true;
+        private bool showMessages = true;
 
         // Cached view — rebuilt only when the captured set, filter, flags, or width
         // change (not every frame). IMGUI repaints continuously, so copying +
@@ -28,17 +33,30 @@ namespace RimDoctor
         private string cacheFilter;
         private bool cacheOnlyAdvice;
         private bool cacheShowBenign;
+        private bool cacheErr, cacheWarn, cacheMsg;
         private float cacheWidth = -1f;
+        private float lastBuildTime;
+        // While errors stream in (worldgen), the capture version bumps every frame.
+        // Rebuilding the list each frame makes it visibly jump/flicker, so when ONLY
+        // the version changed we coalesce rebuilds to this interval (seconds).
+        private const float StreamRebuildInterval = 0.5f;
 
         public void OnSelected() { }
 
         private void EnsureCache(float contentWidth)
         {
+            bool controlsChanged = cachedEntries == null
+                || cacheOnlyAdvice != onlyWithAdvice || cacheShowBenign != showBenign
+                || cacheErr != showErrors || cacheWarn != showWarnings || cacheMsg != showMessages
+                || cacheFilter != filter || !Mathf.Approximately(cacheWidth, contentWidth);
+
             int v = LogDoctor.Version;
-            if (cachedEntries != null && v == cacheVersion && cacheOnlyAdvice == onlyWithAdvice
-                && cacheShowBenign == showBenign && cacheFilter == filter
-                && Mathf.Approximately(cacheWidth, contentWidth))
-                return;
+            if (!controlsChanged)
+            {
+                if (v == cacheVersion) return; // nothing changed at all
+                // Only new entries streamed in — throttle to avoid per-frame flicker.
+                if (Time.realtimeSinceStartup - lastBuildTime < StreamRebuildInterval) return;
+            }
 
             // Fill in culprit mods on the main thread before snapshotting.
             LogDoctor.EnsureAttributed();
@@ -53,48 +71,71 @@ namespace RimDoctor
             cacheFilter = filter;
             cacheOnlyAdvice = onlyWithAdvice;
             cacheShowBenign = showBenign;
+            cacheErr = showErrors; cacheWarn = showWarnings; cacheMsg = showMessages;
             cacheWidth = contentWidth;
+            lastBuildTime = Time.realtimeSinceStartup;
         }
 
         public void Draw(Rect rect)
         {
-            // Toolbar
-            var bar = new Rect(rect.x, rect.y, rect.width, 30f);
+            // ----- Toolbar row 1: actions -----
+            var bar = new Rect(rect.x, rect.y, rect.width, 28f);
             float x = bar.x;
-            if (Widgets.ButtonText(new Rect(x, bar.y, 130f, 28f),
+            if (Widgets.ButtonText(new Rect(x, bar.y, 124f, 28f),
                     "RimDoctor.LogDoctor.Copy".TranslateSafe("Copy report")))
             {
                 GUIUtility.systemCopyBuffer = LogDoctor.BuildReport();
                 Messages.Message("RimDoctor.LogDoctor.Copied".TranslateSafe("Log Doctor report copied to clipboard."),
                     MessageTypeDefOf.TaskCompletion, false);
             }
-            x += 136f;
-            if (Widgets.ButtonText(new Rect(x, bar.y, 130f, 28f),
+            x += 130f;
+            if (Widgets.ButtonText(new Rect(x, bar.y, 134f, 28f),
+                    "RimDoctor.LogDoctor.OpenRaw".TranslateSafe("Open raw game log")))
+                OpenRawGameLog();
+            x += 140f;
+            if (Widgets.ButtonText(new Rect(x, bar.y, 110f, 28f),
                     "RimDoctor.LogDoctor.Reload".TranslateSafe("Reload rules")))
             {
                 LogAdviceDatabase.LoadOrReload();
                 Messages.Message("RimDoctor.LogDoctor.Reloaded".TranslateSafe(
                     $"Reloaded {LogAdviceDatabase.RuleCount} advice rule(s)."), MessageTypeDefOf.TaskCompletion, false);
             }
-            x += 136f;
-            if (Widgets.ButtonText(new Rect(x, bar.y, 100f, 28f),
+            x += 116f;
+            if (Widgets.ButtonText(new Rect(x, bar.y, 90f, 28f),
                     "RimDoctor.LogDoctor.Clear".TranslateSafe("Clear")))
-            {
                 LogDoctor.Clear();
-            }
-            x += 110f;
-            Widgets.CheckboxLabeled(new Rect(x, bar.y, 150f, 28f),
+
+            // Filter field (right-aligned on row 1)
+            var filterLabel = new Rect(rect.xMax - 290f, bar.y + 4f, 52f, 24f);
+            Text.Anchor = TextAnchor.MiddleRight;
+            Widgets.Label(filterLabel, "RimDoctor.LogDoctor.FilterLbl".TranslateSafe("Filter:"));
+            Text.Anchor = TextAnchor.UpperLeft;
+            var filterRect = new Rect(rect.xMax - 234f, bar.y, 210f, 28f);
+            filter = Widgets.TextField(filterRect, filter ?? "");
+            if (!string.IsNullOrEmpty(filter) &&
+                Widgets.ButtonText(new Rect(filterRect.xMax + 2f, bar.y, 22f, 28f), "×"))
+                filter = "";
+
+            // ----- Toolbar row 2: filters -----
+            var bar2 = new Rect(rect.x, bar.yMax + 4f, rect.width, 28f);
+            x = bar2.x;
+            Widgets.CheckboxLabeled(new Rect(x, bar2.y, 96f, 28f),
+                "RimDoctor.LogDoctor.Errors".TranslateSafe("Errors"), ref showErrors);
+            x += 100f;
+            Widgets.CheckboxLabeled(new Rect(x, bar2.y, 116f, 28f),
+                "RimDoctor.LogDoctor.Warnings".TranslateSafe("Warnings"), ref showWarnings);
+            x += 120f;
+            Widgets.CheckboxLabeled(new Rect(x, bar2.y, 116f, 28f),
+                "RimDoctor.LogDoctor.Messages".TranslateSafe("Messages"), ref showMessages);
+            x += 128f;
+            Widgets.CheckboxLabeled(new Rect(x, bar2.y, 150f, 28f),
                 "RimDoctor.LogDoctor.OnlyAdvice".TranslateSafe("Only explained"), ref onlyWithAdvice);
             x += 156f;
-            Widgets.CheckboxLabeled(new Rect(x, bar.y, 200f, 28f),
+            Widgets.CheckboxLabeled(new Rect(x, bar2.y, 200f, 28f),
                 "RimDoctor.LogDoctor.ShowBenign".TranslateSafe($"Show benign ({LogDoctor.BenignCount})"), ref showBenign);
 
-            // Filter field
-            var filterRect = new Rect(rect.xMax - 230f, bar.y, 230f, 28f);
-            filter = Widgets.TextField(filterRect, filter ?? "");
-
             // Summary line — actionable count is the "fix list"; benign is quarantined.
-            var summary = new Rect(rect.x, bar.yMax + 4f, rect.width, 22f);
+            var summary = new Rect(rect.x, bar2.yMax + 4f, rect.width, 22f);
             Text.Font = GameFont.Tiny;
             Widgets.Label(summary, "RimDoctor.LogDoctor.Summary".TranslateSafe(
                 $"{LogDoctor.IssueCount} issue(s) to address • {LogDoctor.BenignCount} benign auto-hidden • "
@@ -138,12 +179,31 @@ namespace RimDoctor
             Widgets.EndScrollView();
         }
 
+        // Escape hatch: open RimWorld's own debug log on demand, bypassing our
+        // redirect for this one open (so power users still have the raw view).
+        private static void OpenRawGameLog()
+        {
+            try
+            {
+                Patch_WindowStack_AddLog.SuppressRedirectOnce = true;
+                Find.WindowStack.Add(new EditWindow_Log());
+            }
+            catch (Exception e)
+            {
+                Patch_WindowStack_AddLog.SuppressRedirectOnce = false;
+                RDLog.Exception("Opening raw game log failed", e);
+            }
+        }
+
         private List<LogEntry> Filtered(List<LogEntry> all)
         {
             var result = new List<LogEntry>();
             foreach (var e in all)
             {
                 if (onlyWithAdvice && !e.HasAdvice) continue;
+                if (e.severity == LogSeverity.Error && !showErrors) continue;
+                if (e.severity == LogSeverity.Warning && !showWarnings) continue;
+                if (e.severity == LogSeverity.Message && !showMessages) continue;
                 if (!string.IsNullOrEmpty(filter))
                 {
                     var f = filter.ToLowerInvariant();
