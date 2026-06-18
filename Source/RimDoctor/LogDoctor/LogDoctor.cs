@@ -127,21 +127,30 @@ namespace RimDoctor
                     foreach (var e in ordered)
                     {
                         if (!string.IsNullOrEmpty(e.culpritMod) || e.advice == null) continue;
-                        if (e.advice.attributionHint == "texturePath")
+                        // Per-entry guard: one failing lookup must never abort the whole pass.
+                        try
                         {
-                            string owner = ModAttribution.OwnerFromMessageDef(e.fullText);
-                            if (owner == null)
+                            if (e.advice.attributionHint == "texturePath")
                             {
-                                var m = e.advice.TryMatch(e.fullText);
-                                if (m != null && m.Groups.Count > 1)
-                                    owner = ModAttribution.GuessOwnerForTexturePath(m.Groups[1].Value.Trim().Trim('\''));
+                                string owner = ModAttribution.OwnerFromMessageDef(e.fullText);
+                                if (owner == null)
+                                {
+                                    var m = e.advice.TryMatch(e.fullText);
+                                    if (m != null && m.Groups.Count > 1)
+                                        owner = ModAttribution.GuessOwnerForTexturePath(m.Groups[1].Value.Trim().Trim('\''));
+                                }
+                                // Last resort: map the def-name prefix (CE_, GR_, VFEP_, VME_, …)
+                                // to a running mod even when the def never finished registering.
+                                e.culpritMod = owner
+                                            ?? ModAttribution.GuessOwnerFromText(e.fullText)
+                                            ?? ModAttribution.OwnerFromDefNamePrefix(e.fullText);
                             }
-                            e.culpritMod = owner ?? ModAttribution.GuessOwnerFromText(e.fullText);
+                            else
+                            {
+                                e.culpritMod = ModAttribution.GuessOwnerFromText(e.fullText);
+                            }
                         }
-                        else
-                        {
-                            e.culpritMod = ModAttribution.GuessOwnerFromText(e.fullText);
-                        }
+                        catch { /* leave this one unattributed; keep going */ }
                     }
                 }
             }

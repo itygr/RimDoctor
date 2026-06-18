@@ -89,6 +89,75 @@ namespace RimDoctor
             new System.Text.RegularExpressions.Regex("for def '([^']+)'",
                 System.Text.RegularExpressions.RegexOptions.Compiled);
 
+        // Maps a def-name prefix (token before the first '_', e.g. "CE", "GR", "VFEP")
+        // to the mod that owns most defs with that prefix. Built once, lazily, on the
+        // main thread. Lets us attribute a texture error for a def that FAILED to
+        // register, via its many sibling defs that did.
+        private static Dictionary<string, string> prefixToMod;
+
+        /// <summary>
+        /// Attribution of last resort: pull "for def 'X_Foo'" out of the text, take the
+        /// "X" prefix, and return whichever running mod owns the most defs sharing it.
+        /// </summary>
+        public static string OwnerFromDefNamePrefix(string text)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(text) || !UnityData.IsInMainThread) return null;
+                var m = DefRefRegex.Match(text);
+                if (!m.Success) return null;
+                string defName = m.Groups[1].Value;
+                int us = defName.IndexOf('_');
+                if (us <= 0) return null;
+                string prefix = defName.Substring(0, us);
+
+                EnsurePrefixIndex();
+                return prefixToMod != null && prefixToMod.TryGetValue(prefix, out var mod) ? mod : null;
+            }
+            catch (Exception e)
+            {
+                RDLog.Exception("OwnerFromDefNamePrefix failed", e);
+                return null;
+            }
+        }
+
+        private static void EnsurePrefixIndex()
+        {
+            if (prefixToMod != null) return;
+            var counts = new Dictionary<string, Dictionary<string, int>>();
+            // ThingDefs cover the vast majority of textured content; TerrainDefs add floors.
+            TallyPrefixes(DefDatabase<ThingDef>.AllDefsListForReading, counts);
+            TallyPrefixes(DefDatabase<TerrainDef>.AllDefsListForReading, counts);
+
+            var result = new Dictionary<string, string>();
+            foreach (var kv in counts)
+            {
+                string bestMod = null; int best = 0;
+                foreach (var mc in kv.Value)
+                    if (mc.Value > best) { best = mc.Value; bestMod = mc.Key; }
+                if (bestMod != null) result[kv.Key] = bestMod;
+            }
+            prefixToMod = result;
+        }
+
+        private static void TallyPrefixes<T>(List<T> defs, Dictionary<string, Dictionary<string, int>> counts) where T : Def
+        {
+            if (defs == null) return;
+            foreach (var d in defs)
+            {
+                if (d?.defName == null || d.modContentPack == null) continue;
+                if (d.modContentPack.IsCoreMod || d.modContentPack.IsOfficialMod) continue;
+                int us = d.defName.IndexOf('_');
+                if (us <= 0) continue;
+                string prefix = d.defName.Substring(0, us);
+                if (prefix.Length < 2) continue; // too short to be a confident mod tag
+                if (!counts.TryGetValue(prefix, out var byMod))
+                    counts[prefix] = byMod = new Dictionary<string, int>();
+                byMod.TryGetValue(d.modContentPack.Name, out var c);
+                byMod[d.modContentPack.Name] = c + 1;
+            }
+        }
+
         private static bool ModHasTextureUnder(ModContentPack mod, string dir)
         {
             try
