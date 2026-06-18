@@ -98,11 +98,21 @@
     },
     {
       "id": "ce-recipe-probe",
-      "pattern": "Combat Extended :: .*(could not be found|found no recipe MakeAmmo_)",
+      "pattern": "(Combat Extended ::|CE ammo injector )",
       "severity": "Message",
-      "meaning": "Combat Extended is probing for ammo recipes that don't exist for some weapons.",
-      "likelyCause": "Benign CE ammo-injection check.",
-      "suggestedFix": "Ignore — this is expected CE behavior, not an error.",
+      "meaning": "Combat Extended status/ammo-injection chatter (checking compat, injecting ammo, probing for recipes that don't exist for some weapons).",
+      "likelyCause": "Expected CE startup behavior.",
+      "suggestedFix": "Ignore — normal CE logging, not an error.",
+      "attributionHint": "none",
+      "benign": true
+    },
+    {
+      "id": "badtexture-masktex",
+      "pattern": "Custom/Cutout_BadTexture'.*texture property '_MaskTex'",
+      "severity": "Error",
+      "meaning": "RimWorld's fallback 'bad texture' was used in place of a missing texture, and something tried to apply a mask to it.",
+      "likelyCause": "A downstream cascade of the missing textures above — not an independent problem.",
+      "suggestedFix": "Fix the underlying missing textures (re-subscribe/verify the owning mods). This message stops once they load.",
       "attributionHint": "none",
       "benign": true
     },

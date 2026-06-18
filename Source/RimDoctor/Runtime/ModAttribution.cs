@@ -59,6 +59,36 @@ namespace RimDoctor
             return null;
         }
 
+        /// <summary>
+        /// Many texture errors include "for def 'X'". Resolve that def to its owning
+        /// mod — precise attribution for missing mod textures that have no stack trace.
+        /// </summary>
+        public static string OwnerFromMessageDef(string text)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(text) || !UnityData.IsInMainThread) return null;
+                var m = DefRefRegex.Match(text);
+                if (!m.Success) return null;
+                string defName = m.Groups[1].Value;
+
+                // Most are ThingDefs (weapons/apparel/buildings); check it then a few others.
+                var td = DefDatabase<ThingDef>.GetNamedSilentFail(defName);
+                if (td?.modContentPack != null) return td.modContentPack.Name;
+                var terr = DefDatabase<TerrainDef>.GetNamedSilentFail(defName);
+                if (terr?.modContentPack != null) return terr.modContentPack.Name;
+            }
+            catch (Exception e)
+            {
+                RDLog.Exception("OwnerFromMessageDef failed", e);
+            }
+            return null;
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex DefRefRegex =
+            new System.Text.RegularExpressions.Regex("for def '([^']+)'",
+                System.Text.RegularExpressions.RegexOptions.Compiled);
+
         private static bool ModHasTextureUnder(ModContentPack mod, string dir)
         {
             try

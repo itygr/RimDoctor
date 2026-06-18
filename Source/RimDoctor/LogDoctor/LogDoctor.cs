@@ -14,8 +14,8 @@ namespace RimDoctor
     /// </summary>
     public static class LogDoctor
     {
-        private const int MaxEntries = 500;
-        private const int MaxBenign = 400;
+        private const int MaxEntries = 2000;  // big modlists legitimately produce many distinct errors
+        private const int MaxBenign = 1500;
         private static readonly object gate = new object();
         private static readonly Dictionary<string, LogEntry> byKey = new Dictionary<string, LogEntry>();
         private static readonly List<LogEntry> ordered = new List<LogEntry>(); // newest last — ACTIONABLE only
@@ -94,10 +94,11 @@ namespace RimDoctor
                             }
                         }
 
-                        // 2) Re-attribute entries captured before the assembly index
-                        //    was ready (load-time exceptions).
+                        // 2) Re-attribute entries captured before defs/index were
+                        //    ready: prefer the exact def owner, then assembly/namespace.
                         if (string.IsNullOrEmpty(e.culpritMod))
-                            e.culpritMod = ModAttribution.GuessOwnerFromText(e.fullText);
+                            e.culpritMod = ModAttribution.OwnerFromMessageDef(e.fullText)
+                                        ?? ModAttribution.GuessOwnerFromText(e.fullText);
                     }
                     version++;
                 }
@@ -191,6 +192,12 @@ namespace RimDoctor
                         break;
                     }
 
+                    // Unmatched Message-level lines are mod status chatter ("...done",
+                    // "MVCF applied 52 patches", "CharacterEditor v1.6.3") — informational,
+                    // never actionable. Quarantine so they don't fill the list.
+                    if (entry.advice == null && severity == LogSeverity.Message)
+                        entry.isBenign = true;
+
                     if (entry.isBenign)
                     {
                         // Quarantine: never touches the actionable list/cap, and we
@@ -245,6 +252,10 @@ namespace RimDoctor
                 switch (rule.attributionHint)
                 {
                     case "texturePath":
+                        // Prefer the exact owning mod via "for def 'X'", then fall
+                        // back to whoever owns the texture's folder.
+                        string byDef = ModAttribution.OwnerFromMessageDef(full);
+                        if (byDef != null) return byDef;
                         if (m.Groups.Count > 1)
                             return ModAttribution.GuessOwnerForTexturePath(m.Groups[1].Value.Trim());
                         return null;
