@@ -42,7 +42,14 @@ namespace RimDoctor
         {
             try
             {
-                if (Find.WindowStack != null && Find.WindowStack.IsOpen(typeof(Dialog_RimDoctorLog)))
+                // Errors logged during load fire from a background long-event thread,
+                // where the window stack can't be touched. Touching it there threw an
+                // NRE on every error (thousands during a modded load) and made the
+                // redirect fall through to the vanilla log. Only act on the main thread
+                // with a live stack; otherwise leave it — the box stays clickable later.
+                if (!UnityData.IsInMainThread) return;
+                if (Find.WindowStack == null) return;
+                if (Find.WindowStack.IsOpen(typeof(Dialog_RimDoctorLog)))
                     return; // already open — do nothing (no strobe)
                 Instance = new Dialog_RimDoctorLog();
                 Find.WindowStack.Add(Instance);
