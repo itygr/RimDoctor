@@ -79,7 +79,7 @@ namespace RimDoctor
                     EnsureEarlyInit(); // in case the Mod ctor path didn't run for some reason
                     // Index sound paths now that defs are loaded, so sound-path texture
                     // probes get classified benign.
-                    SoundPathIndex.Build();
+                    SoundPathIndex.EnsureReady(); // builds once; skips if already built lazily during load
                     ModAssemblyIndex.Build();          // for code-based culprit attribution
                     LogDoctor.ReclassifySoundProbes(); // sweep load-time probes into benign
 
