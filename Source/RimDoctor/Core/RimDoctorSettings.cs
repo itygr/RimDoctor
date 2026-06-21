@@ -35,8 +35,11 @@ namespace RimDoctor
         // from the game's dev log so the real, actionable errors stand out.
         public bool suppressBenignLogSpam = true;
         // Open RimDoctor's plain-language log window instead of RimWorld's raw one
-        // when the red error box is clicked / the log auto-opens.
-        public bool useRimDoctorLogWindow = true;
+        // when the red error box is clicked. OPT-IN (default off): on big mod packs
+        // the old default auto-popped the window on every streamed error, which was
+        // intrusive and interrupted audio. The Log Doctor is always available from the
+        // RimDoctor tab regardless of this setting; this only changes the red-box click.
+        public bool useRimDoctorLogWindow = false;
 
         // ---- Milestone 5: repair tier ----
         public RepairTier repairTier = RepairTier.ReportOnly;
@@ -63,7 +66,7 @@ namespace RimDoctor
             Scribe_Values.Look(ref logEachSubstitution, "logEachSubstitution", true);
             Scribe_Values.Look(ref logDoctorEnabled, "logDoctorEnabled", true);
             Scribe_Values.Look(ref suppressBenignLogSpam, "suppressBenignLogSpam", true);
-            Scribe_Values.Look(ref useRimDoctorLogWindow, "useRimDoctorLogWindow", true);
+            Scribe_Values.Look(ref useRimDoctorLogWindow, "useRimDoctorLogWindow", false);
             Scribe_Values.Look(ref showPerfOverlay, "showPerfOverlay", false);
             Scribe_Values.Look(ref detailedThingTiming, "detailedThingTiming", false);
             Scribe_Values.Look(ref overlayX, "overlayX", 0f);

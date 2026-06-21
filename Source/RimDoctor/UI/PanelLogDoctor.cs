@@ -185,12 +185,10 @@ namespace RimDoctor
         {
             try
             {
-                Patch_WindowStack_AddLog.SuppressRedirectOnce = true;
                 Find.WindowStack.Add(new EditWindow_Log());
             }
             catch (Exception e)
             {
-                Patch_WindowStack_AddLog.SuppressRedirectOnce = false;
                 RDLog.Exception("Opening raw game log failed", e);
             }
         }

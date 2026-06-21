@@ -33,32 +33,13 @@ namespace RimDoctor
         /// </summary>
         public static bool ApplyAndRestart(SortResult result)
         {
-            try
-            {
-                if (result == null || result.proposedPackageIds.Count == 0)
-                    return false;
-
-                // 1. Backup first (safety constraint).
-                string set = BackupManager.NewBackupSet();
-                string cfg = ModsConfigPath;
-                if (set != null && cfg != null)
-                    BackupManager.BackupFile(set, cfg);
-                RDLog.Msg($"Backed up ModsConfig.xml to {set ?? "(backup failed)"} before applying load order.");
-
-                // 2. Write the new active order.
-                ModsConfig.SetActiveToList(result.proposedPackageIds);
-                ModsConfig.Save();
-                RDLog.Msg($"Applied new load order ({result.proposedPackageIds.Count} mods). Restarting…");
-
-                // 3. Restart — RimWorld re-reads the order at startup.
-                GenCommandLine.Restart();
-                return true;
-            }
-            catch (Exception e)
-            {
-                RDLog.Exception("ApplyAndRestart failed — load order NOT changed", e);
-                return false;
-            }
+            // DISABLED. Auto-applying a sorted order called ModsConfig.SetActiveToList,
+            // which OVERWROTE the user's entire load order (reordered everything and
+            // dropped any mod the sorter couldn't place). That behaviour has been removed.
+            // Kept as a safe no-op so nothing in RimDoctor can ever rewrite ModsConfig.xml.
+            _ = result;
+            RDLog.Msg("Load-order apply is disabled in RimDoctor — ModsConfig.xml left untouched.");
+            return false;
         }
 
         public static string ExportPath

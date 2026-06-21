@@ -26,7 +26,6 @@ namespace RimDoctor
                 {
                     panels = new List<IRimDoctorPanel>
                     {
-                        new PanelSorter(),
                         new PanelHealth(),
                         new PanelLogDoctor(),
                         new PanelPerformance(),
