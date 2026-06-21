@@ -32,3 +32,6 @@ tools/app/icon_1024.png
 tools/app/make_icon
 tools/app/make_preview
 tools/app/RimDoctorRepair
+
+# Release archives (attached to GitHub releases, not tracked)
+/RimDoctor-*.zip
