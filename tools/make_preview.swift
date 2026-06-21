@@ -41,14 +41,14 @@ let dim = NSColor(white: 0.78, alpha: 1)
 let green = NSColor(red: 0.55, green: 0.92, blue: 0.6, alpha: 1)
 
 draw("RimDoctor", x: 150, topY: 44, size: 76, color: white, bold: true)
-draw("by itygr   ·   Smart mod manager + load / texture / log doctor", x: 152, topY: 132, size: 26, color: dim)
+draw("by itygr   ·   v1.0.3   ·   mod manager + load / texture / log doctor", x: 152, topY: 132, size: 25, color: dim)
 
 let bullets = [
-    "Auto-sort load order (deps + community rules)",
-    "Prevent missing-texture crashes at runtime",
-    "Scan content health; explain log errors in plain language",
-    "Live TPS / FPS + per-mod tick & memory analytics",
-    "Repair tiers via a safe local override mod",
+    "Stops missing-texture crashes at runtime",
+    "Log Doctor: plain-language errors + likely culprit mod",
+    "Live TPS / FPS, per-mod tick & memory analytics + on-screen HUD",
+    "Startup load-weight & save-bloat analytics, by mod",
+    "Safe repairs via a generated local override mod",
 ]
 var y: CGFloat = 210
 for b in bullets {
