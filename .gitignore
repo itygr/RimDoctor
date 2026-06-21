@@ -20,3 +20,15 @@ Logs/
 
 # Local Claude Code settings
 .claude/
+
+# Generated clean-release staging (rebuild with tools/make_release.sh)
+/release/
+
+# Mac helper app: keep the SOURCE (.swift, build_app.sh), ignore generated artifacts
+tools/app/*.app/
+tools/app/AppIcon.icns
+tools/app/AppIcon.iconset/
+tools/app/icon_1024.png
+tools/app/make_icon
+tools/app/make_preview
+tools/app/RimDoctorRepair

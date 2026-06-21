@@ -2,11 +2,11 @@
 <Defs>
   <MainButtonDef>
     <defName>RimDoctor</defName>
-    <label>rimdoctor</label>
-    <description>Open RimDoctor: load-order sorter, content health scanner, and Log Doctor.</description>
+    <label>RimDoctor</label>
+    <description>Open RimDoctor: load-order sorter, content health scanner, Log Doctor, and live performance analytics.</description>
     <tabWindowClass>RimDoctor.MainTabWindow_RimDoctor</tabWindowClass>
     <order>120</order>
     <validWithoutMap>true</validWithoutMap>
-    <minimized>true</minimized>
+    <minimized>false</minimized>
   </MainButtonDef>
 </Defs>

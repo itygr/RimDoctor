@@ -42,6 +42,16 @@ namespace RimDoctor
         public RepairTier repairTier = RepairTier.ReportOnly;
         public int backupRetention = 10; // how many timestamped backup sets to keep
 
+        // ---- Performance analytics (TPS + per-mod tick attribution) ----
+        // Show the compact on-screen performance HUD (TPS/ms/FPS/top hog).
+        public bool showPerfOverlay = false;
+        // Opt-in: time Thing.DoTick per-mod. Accurate but a hot path (~5-15% tick tax);
+        // when off, per-mod cost is shown via the free count proxy instead.
+        public bool detailedThingTiming = false;
+        // Persisted HUD position (top-left default when both 0).
+        public float overlayX = 0f;
+        public float overlayY = 0f;
+
         // ---- Data refresh URLs (hot-reloadable rule DBs) ----
         public string communityRulesUrl =
             "https://raw.githubusercontent.com/RimSort/Community-Rules-DB/main/communityRules.json";
@@ -54,6 +64,10 @@ namespace RimDoctor
             Scribe_Values.Look(ref logDoctorEnabled, "logDoctorEnabled", true);
             Scribe_Values.Look(ref suppressBenignLogSpam, "suppressBenignLogSpam", true);
             Scribe_Values.Look(ref useRimDoctorLogWindow, "useRimDoctorLogWindow", true);
+            Scribe_Values.Look(ref showPerfOverlay, "showPerfOverlay", false);
+            Scribe_Values.Look(ref detailedThingTiming, "detailedThingTiming", false);
+            Scribe_Values.Look(ref overlayX, "overlayX", 0f);
+            Scribe_Values.Look(ref overlayY, "overlayY", 0f);
             Scribe_Values.Look(ref repairTier, "repairTier", RepairTier.ReportOnly);
             Scribe_Values.Look(ref backupRetention, "backupRetention", 10);
             Scribe_Values.Look(ref communityRulesUrl, "communityRulesUrl",

@@ -82,6 +82,17 @@ namespace RimDoctor
                     SoundPathIndex.Build();
                     ModAssemblyIndex.Build();          // for code-based culprit attribution
                     LogDoctor.ReclassifySoundProbes(); // sweep load-time probes into benign
+
+                    // Performance attribution: map assemblies -> mods, time every
+                    // component-tick override (always on), and restore opt-in per-thing
+                    // timing if the player had it enabled.
+                    TickAttribution.BuildAssemblyMap();
+                    Patch_Perf_Components.PatchAll(RimDoctorMod.HarmonyInstance);
+                    if (RimDoctorMod.Instance?.Settings?.detailedThingTiming == true)
+                        Patch_Perf_ThingTick.Enable();
+
+                    // Per-mod startup load weight (defs/assemblies + RimDoctor-witnessed span).
+                    StartupAnalytics.Collect();
                     RDLog.Msg($"Load completed cleanly. Log Doctor: {LogAdviceDatabase.RuleCount} rule(s); " +
                               $"{LogDoctor.IssueCount} issue(s) to address, {LogDoctor.BenignCount} benign.");
                 }

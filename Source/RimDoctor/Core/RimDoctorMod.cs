@@ -34,6 +34,9 @@ namespace RimDoctor
             Instance = this;
             ContentPack = content;
 
+            // Start the load-weight clock as early as possible (before defs load).
+            try { StartupAnalytics.MarkCtor(); } catch { }
+
             // Start the persistent diagnostic log first so everything below is captured.
             try { DiagnosticLog.Init(); } catch { /* logger must never block load */ }
 
@@ -132,6 +135,25 @@ namespace RimDoctor
                     ref settings.useRimDoctorLogWindow,
                     "RimDoctor.Settings.UseLogWindow.Tip".TranslateSafe(
                         "When you click the red error box (or the log auto-opens), show RimDoctor's clean, plain-language log — what each error means, the likely culprit mod, and the fix — instead of RimWorld's raw message list. Turn off to use the vanilla log."));
+
+                l.Gap();
+                l.Label("RimDoctor.Settings.PerfHeader".TranslateSafe("Performance analytics"));
+                l.CheckboxLabeled(
+                    "RimDoctor.Settings.PerfOverlay".TranslateSafe("Show performance overlay (HUD)"),
+                    ref settings.showPerfOverlay,
+                    "RimDoctor.Settings.PerfOverlay.Tip".TranslateSafe(
+                        "Draws a small, draggable on-screen box with live TPS, ms/tick, FPS and the top tick-consuming mod. Also toggleable from the bottom-right play-settings strip."));
+                bool prevThingTiming = settings.detailedThingTiming;
+                l.CheckboxLabeled(
+                    "RimDoctor.Settings.ThingTiming".TranslateSafe("Detailed per-thing tick timing (opt-in — ~5-15% tick tax)"),
+                    ref settings.detailedThingTiming,
+                    "RimDoctor.Settings.ThingTiming.Tip".TranslateSafe(
+                        "Precisely times every Thing's tick to attribute simulation cost to specific mods. Accurate but adds overhead, so it's off by default. With it off, the Performance tab attributes by object count instead. Components are always measured precisely either way."));
+                if (settings.detailedThingTiming != prevThingTiming)
+                {
+                    if (settings.detailedThingTiming) Patch_Perf_ThingTick.Enable();
+                    else Patch_Perf_ThingTick.Disable();
+                }
 
                 l.Gap();
                 l.Label("RimDoctor.Settings.RepairTier".TranslateSafe("Repair tier"));

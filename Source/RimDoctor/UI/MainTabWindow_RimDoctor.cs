@@ -29,6 +29,8 @@ namespace RimDoctor
                         new PanelSorter(),
                         new PanelHealth(),
                         new PanelLogDoctor(),
+                        new PanelPerformance(),
+                        new PanelAnalytics(),
                         new PanelDiagnostics()
                     };
                 }

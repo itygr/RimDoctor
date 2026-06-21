@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
   <name>RimDoctor</name>
-  <author>tyler</author>
+  <author>itygr</author>
   <packageId>tyler.rimdoctor</packageId>
   <description>RimDoctor — a smart in-game mod manager + load/texture/log doctor.
 
