@@ -22,6 +22,9 @@ namespace RimDoctor
         private RimDoctorSettings settings;
         public RimDoctorSettings Settings => settings;
 
+        /// <summary>Mod version — shown in the tab title and the About description.</summary>
+        public const string Version = "1.0.2";
+
         /// <summary>The single Harmony instance shared by all RimDoctor patches.</summary>
         public const string HarmonyId = "tyler.rimdoctor";
         public static Harmony HarmonyInstance { get; private set; }

@@ -43,7 +43,7 @@ namespace RimDoctor
             {
                 var title = new Rect(inRect.x, inRect.y, inRect.width, 36f);
                 Text.Font = GameFont.Medium;
-                Widgets.Label(title, "RimDoctor");
+                Widgets.Label(title, "RimDoctor  v" + RimDoctorMod.Version);
                 Text.Font = GameFont.Small;
 
                 // Tool selector buttons

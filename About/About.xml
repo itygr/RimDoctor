@@ -3,13 +3,17 @@
   <name>RimDoctor</name>
   <author>itygr</author>
   <packageId>tyler.rimdoctor</packageId>
-  <description>RimDoctor — a smart in-game mod manager + load/texture/log doctor.
+  <description>RimDoctor v1.0.2 — a smart in-game mod manager + load/texture/log doctor.
 
-• Auto-sorts your load order using dependency rules + a community rules database, then writes ModsConfig.xml and offers a restart.
-• Scans for broken content (missing textures, bad def paths, incomplete mod downloads) and shows a clear health report.
 • Prevents missing-texture crashes at runtime by substituting a generated placeholder for any texture that fails to load.
 • Reads the live error log and explains it in plain language — what it means, the likely culprit mod, and a suggested fix.
-• Repairs problems across three tiers: report-only, safe auto-fixes, and maximum (via a generated local override mod — never by editing Workshop files).
+• Scans for broken content (missing textures, bad def paths, incomplete mod downloads) and shows a clear health report.
+• Live performance analytics: TPS/FPS, ms-per-tick, memory/GC, and per-mod tick attribution (which mods cost you ticks), plus an optional compact on-screen overlay.
+• Startup load-weight and save/world bloat analytics, broken down by mod.
+• Suggests a dependency-aware load order (read-only) and repairs problems via a generated local override mod — never by editing Workshop files.
+
+Changelog
+v1.0.2 — Log window is now OPT-IN (off by default): it no longer auto-pops on every error, which fixes the intrusive UI and audio interruption reported on large mod packs. Removed the auto-apply load-order sort (it could overwrite your modlist). Minor startup fixes.
 
 RimDoctor fails safe: if it errors, it disables the affected feature and never blocks the game from loading.</description>
   <supportedVersions>
