@@ -65,3 +65,8 @@ Requires [Harmony](https://steamcommunity.com/sharedfiles/filedetails/?id=200946
 
 All features are individually Harmony-patched and try/catch-guarded — a failure in
 any one disables only that feature and never blocks game startup.
+
+## License
+
+[MIT](LICENSE) © 2026 Tyler Grieve (itygr). Free to use, modify, and redistribute
+with attribution.
