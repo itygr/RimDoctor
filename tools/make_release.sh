@@ -13,7 +13,14 @@ mkdir -p "$OUT"
 
 # ---- ship list (only what the game loads) ----
 cp -R "About"            "$OUT/"            # About.xml, Preview.png, PublishedFileId.txt
-cp -R "1.6"             "$OUT/"             # Assemblies (+ Defs if any)
+cp -R "1.6"             "$OUT/"             # Assemblies (+ versioned defs if any)
+# Root mod-content folders RimWorld loads (loadFolders.xml maps "/" -> repo root).
+# Defs holds the MainButtonDef (the in-game tab) — omitting it = no tab!
+[ -d "Defs" ]        && cp -R "Defs"        "$OUT/"
+[ -d "Languages" ]   && cp -R "Languages"   "$OUT/"
+[ -d "Patches" ]     && cp -R "Patches"     "$OUT/"
+[ -d "Textures" ]    && cp -R "Textures"    "$OUT/"
+[ -d "Sounds" ]      && cp -R "Sounds"      "$OUT/"
 [ -d "Data" ]        && cp -R "Data"        "$OUT/"
 [ -f "loadFolders.xml" ] && cp "loadFolders.xml" "$OUT/"
 [ -f "LICENSE" ]     && cp "LICENSE"        "$OUT/"
