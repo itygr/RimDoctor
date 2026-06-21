@@ -8,14 +8,18 @@ namespace RimDoctor
     /// fields from PerfMonitor + TickAttribution and draws with DrawBoxSolid + Label
     /// (no textures, no per-frame allocation). Position persists in settings.
     /// </summary>
+    [StaticConstructorOnStartup]
     public static class PerfOverlay
     {
         private const float W = 200f, H = 96f;
         private static bool dragging;
         private static Vector2 dragOff;
 
+        // Built on the main thread at startup (StaticConstructorOnStartup) so RimWorld
+        // doesn't warn about a Texture2D field and the icon is never created off-thread.
         private static Texture2D icon;
-        public static Texture2D HudIcon { get { if (icon == null) icon = BuildIcon(); return icon; } }
+        static PerfOverlay() { try { icon = BuildIcon(); } catch { } }
+        public static Texture2D HudIcon { get { if (icon == null) { try { icon = BuildIcon(); } catch { } } return icon; } }
 
         public static void Draw(RimDoctorSettings s)
         {
