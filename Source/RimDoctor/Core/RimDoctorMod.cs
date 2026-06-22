@@ -23,7 +23,7 @@ namespace RimDoctor
         public RimDoctorSettings Settings => settings;
 
         /// <summary>Mod version — shown in the tab title and the About description.</summary>
-        public const string Version = "1.0.3";
+        public const string Version = "1.0.5";
 
         /// <summary>The single Harmony instance shared by all RimDoctor patches.</summary>
         public const string HarmonyId = "tyler.rimdoctor";
@@ -112,17 +112,10 @@ namespace RimDoctor
                     "RimDoctor.Settings.LogSub".TranslateSafe("Log each substituted texture once"),
                     ref settings.logEachSubstitution);
 
-                l.Gap(6f);
-                bool prevAggressive = settings.aggressiveLoadFallback;
-                l.CheckboxLabeled(
-                    "RimDoctor.Settings.LoadFallback".TranslateSafe("⚠ Aggressive load-time fallback (DANGEROUS — can crash on load)"),
-                    ref settings.aggressiveLoadFallback,
-                    "RimDoctor.Settings.LoadFallback.Tip".TranslateSafe(
-                        "Also substitute placeholders when textures are LOADED (ContentFinder.Get). RimWorld and many mods request textures that are meant to be absent and handle the null; substituting here breaks that and has been observed to crash the game on load. Leave OFF unless you know exactly why you need it."));
-                if (settings.aggressiveLoadFallback && !prevAggressive)
-                    Messages.Message("RimDoctor.Settings.LoadFallback.Warn".TranslateSafe(
-                        "Aggressive load-time fallback can crash the game on load. Enable at your own risk."),
-                        MessageTypeDefOf.CautionInput, false);
+                // NOTE: the old "aggressive load-time fallback" (ContentFinder.Get
+                // patch) was removed in v1.0.4 — on Mono it also intercepted
+                // ContentFinder<AudioClip>.Get via generic code sharing and silently
+                // broke ALL game audio. The safe draw-layer fallback above remains.
 
                 l.Gap();
                 l.CheckboxLabeled(

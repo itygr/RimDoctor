@@ -3,20 +3,40 @@
   <name>RimDoctor</name>
   <author>itygr</author>
   <packageId>tyler.rimdoctor</packageId>
-  <description>RimDoctor v1.0.3 — a smart in-game mod manager + load/texture/log doctor.
+  <description>RimDoctor v1.0.5 — an in-game mod doctor that keeps your colony running, and tells you the truth when something breaks.
 
-• Prevents missing-texture crashes at runtime by substituting a generated placeholder for any texture that fails to load.
-• Reads the live error log and explains it in plain language — what it means, the likely culprit mod, and a suggested fix.
-• Scans for broken content (missing textures, bad def paths, incomplete mod downloads) and shows a clear health report.
-• Live performance analytics: TPS/FPS, ms-per-tick, memory/GC, and per-mod tick attribution (which mods cost you ticks), plus an optional compact on-screen overlay.
-• Startup load-weight and save/world bloat analytics, broken down by mod.
-• Suggests a dependency-aware load order (read-only) and repairs problems via a generated local override mod — never by editing Workshop files.
+I run a big modlist. Like, a lot of mods. And big modlists fail in quiet, confusing ways: a missing texture freezes a screen, the error log scrolls faster than you can read it, and your TPS quietly dies with zero clue which mod did it. I got tired of guessing and digging through raw logs, so I built the tool I actually wanted — one that watches the game from the inside, explains what's going wrong in plain language, and points a finger at the mod most likely causing it.
+
+That's RimDoctor: a diagnostic mod, a performance meter, and a translator for RimWorld's error log, all living in one tab in your game.
+
+And it fails safe. If RimDoctor itself ever hits a problem, it shuts off that one feature and gets out of the way. It will never stop your game from loading.
+
+What it does:
+• Stops missing-texture crashes at runtime. When a texture fails to load and would otherwise freeze or crash a screen, RimDoctor draws a placeholder instead so you stay in the game and keep playing.
+• Log Doctor. Reads your live error log and translates it — what the error actually means, the mod most likely responsible, and how to fix it. The known-harmless spam (the stuff that scrolls forever and means nothing) gets quarantined so the real problems stop getting buried.
+• Content health scan. Hunts down broken content — missing textures, bad def paths, half-downloaded mods — and lays it out in one clean report instead of a wall of red.
+• Live performance analytics. TPS, FPS, ms per tick, memory and GC, plus per-mod tick attribution — so you can finally see which mods are eating your frames instead of blaming the wrong one. Optional on-screen HUD you can leave up while you play.
+• Startup + save analytics. How much each mod costs you at load time, plus save and world bloat, broken down by mod. Great for trimming a list that's gotten out of hand.
+• Safe repairs. Any fix it makes goes into a separate generated override mod — tiered (report-only, safe, or maximum) and backed up. RimDoctor never touches or edits your Workshop files.
+• Load-order help. Dependency-aware suggestions, read-only — it tells you, it doesn't yank your list around behind your back.
+
+How to use it:
+RimDoctor runs inside the game — there's no external launcher and nothing to babysit. Add it, load in, and open the RimDoctor tab at the bottom of the screen. That's where the health report, Log Doctor, performance meter, and analytics all live. Pop it open whenever something feels off, or leave the HUD running while you play. Settings (HUD, log window, repair tier) are under Options.
+
+Good to know:
+• Requires Harmony — load it above RimDoctor.
+• Built for RimWorld 1.6. Mac and Windows.
+• Safe to add to an existing save.
+• It reads your live game session, so it works from in-game, not from the main-menu mod list.
+
+If it helps your colony survive one more raid, it did its job.
 
 Changelog
-v1.0.3 — Fixed the in-game RimDoctor tab not appearing (the packaged release was missing its Defs folder). The tab and version now show in-game.
-v1.0.2 — Log window is now OPT-IN (off by default): it no longer auto-pops on every error, which fixes the intrusive UI and audio interruption reported on large mod packs. Removed the auto-apply load-order sort (it could overwrite your modlist). Minor startup fixes.
+v1.0.5 — Critical audio fix: removed a load-time texture patch that on macOS could also intercept audio loading and silence all music and sound effects (the "could not resolve any grains" log flood) — sound works normally again. Brought the Load Order tab back as read-only suggestions; the old one-click auto-sort that could reset your mod list is gone for good. The safe missing-texture protection is unchanged.
+v1.0.3 — Fixed the in-game RimDoctor tab not showing up (the packaged release was missing its Defs folder).
+v1.0.2 — Log window is now opt-in so it no longer pops on every error. Removed the auto-apply load-order sort. Minor startup fixes.
 
-RimDoctor fails safe: if it errors, it disables the affected feature and never blocks the game from loading.</description>
+Real talk: this helps me figure out what's jacking up my own game. You've gotta be in-game to use it — that's the whole point, it reads your live session. I'm a dad with little kids and a nonprofit running, so I may read the comments, may not — no promises. But if you hit a real bug, drop it anyway; I do get to those. Try it out. Hope it saves your colony a few headaches.</description>
   <supportedVersions>
     <li>1.6</li>
   </supportedVersions>

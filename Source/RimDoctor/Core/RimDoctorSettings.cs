@@ -22,11 +22,11 @@ namespace RimDoctor
         public bool textureFallbackEnabled = true;
         public bool logEachSubstitution = true; // log each missing path once (deduped)
 
-        // DANGEROUS, OFF by default: also substitute at ContentFinder<Texture2D>.Get
-        // (load time). RimWorld + many mods call Get expecting null and handle it;
-        // handing back a placeholder breaks that logic and can crash on load. Only
-        // enable if you understand the risk. The draw-layer fallback above is the
-        // real anti-freeze protection; this is almost never needed.
+        // DEPRECATED / NO-OP since v1.0.4. Field kept only so existing config files
+        // load without complaint. The old behaviour patched ContentFinder<Texture2D>.Get,
+        // which on Mono also intercepted ContentFinder<AudioClip>.Get (generic code
+        // sharing) and silently broke ALL audio. The patch has been removed; this
+        // value is no longer read anywhere.
         public bool aggressiveLoadFallback = false;
 
         // ---- Milestone 4: Log Doctor ----

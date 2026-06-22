@@ -41,7 +41,7 @@ let dim = NSColor(white: 0.78, alpha: 1)
 let green = NSColor(red: 0.55, green: 0.92, blue: 0.6, alpha: 1)
 
 draw("RimDoctor", x: 150, topY: 44, size: 76, color: white, bold: true)
-draw("by itygr   ·   v1.0.3   ·   mod manager + load / texture / log doctor", x: 152, topY: 132, size: 25, color: dim)
+draw("by itygr   ·   mod manager + load / texture / log doctor", x: 152, topY: 132, size: 25, color: dim)
 
 let bullets = [
     "Stops missing-texture crashes at runtime",
